@@ -2,14 +2,12 @@
  * Demo API Layer
  *
  * Drop-in replacement for api.ts that runs entirely in the browser.
- * Uses the TypeScript color engine instead of the remote backend.
+ * For the demo, accepts ANY color as a perfect match — no color engine needed.
  * Calls the Next.js API route for DALL-E preview images.
  *
- * When Matt is ready for MVP, swap imports back to api.ts.
+ * When Matt is ready for MVP, swap imports back to api.ts with the real color engine.
  */
 
-import { colorEngine, hexToRgb, rgbToLab, rgbToHex, labToRgb } from './color-engine';
-import { SYNTHETIC_COLOR_DATA } from './color-data';
 import type {
   GlazeDesignRequest,
   GlazeDesignResponse,
@@ -17,46 +15,32 @@ import type {
   PublicGlaze,
 } from './api';
 
-// ── Initialize the color engine on first import ──
-let engineReady = false;
-
-function ensureEngine() {
-  if (!engineReady) {
-    colorEngine.loadDataset(SYNTHETIC_COLOR_DATA);
-    engineReady = true;
-  }
-}
-
-// ── Glaze naming heuristics ──
+// ── Glaze naming heuristics (simplified, uses RGB from hex) ──
 
 function generateGlazeName(hex: string): string {
-  const [r, g, b] = hexToRgb(hex);
-  const lab = rgbToLab(r, g, b);
-  const [L, a, bVal] = lab;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
 
-  // Build a name from the color characteristics
-  const lightness = L > 75 ? 'Light' : L > 50 ? '' : L > 30 ? 'Deep' : 'Dark';
+  const brightness = (r + g + b) / 3;
+  const lightness = brightness > 200 ? 'Light' : brightness > 140 ? '' : brightness > 80 ? 'Deep' : 'Dark';
+
   let hue = '';
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const sat = max - min;
 
-  if (Math.abs(a) < 8 && Math.abs(bVal) < 8) {
-    hue = L > 70 ? 'Ivory' : L > 40 ? 'Ash' : 'Charcoal';
-  } else if (a > 15 && bVal > 15) {
-    hue = bVal > a ? 'Amber' : 'Coral';
-  } else if (a > 15 && bVal < -5) {
-    hue = 'Plum';
-  } else if (a > 5) {
-    hue = bVal > 20 ? 'Terracotta' : 'Rose';
-  } else if (a < -10 && bVal > 10) {
-    hue = 'Jade';
-  } else if (a < -10 && bVal < -10) {
-    hue = 'Teal';
-  } else if (a < -5) {
-    hue = bVal > 0 ? 'Celadon' : 'Slate Blue';
-  } else if (bVal > 30) {
+  if (sat < 30) {
+    hue = brightness > 180 ? 'Ivory' : brightness > 100 ? 'Ash' : 'Charcoal';
+  } else if (r > g && r > b) {
+    hue = g > b + 40 ? 'Amber' : b > 100 ? 'Rose' : g > 80 ? 'Terracotta' : 'Coral';
+  } else if (g > r && g > b) {
+    hue = b > r ? 'Teal' : r > 100 ? 'Celadon' : 'Jade';
+  } else if (b > r && b > g) {
+    hue = r > g + 30 ? 'Plum' : r > 100 ? 'Slate Blue' : g > 100 ? 'Sky' : 'Cobalt';
+  } else if (r > 200 && g > 150 && b < 100) {
     hue = 'Honey';
-  } else if (bVal < -20) {
-    hue = 'Cobalt';
-  } else if (bVal > 10) {
+  } else if (r > 180 && g > 120) {
     hue = 'Sand';
   } else {
     hue = 'Stone';
@@ -79,41 +63,47 @@ function estimatePrice(batchSizeGrams: number, isPrivate: boolean): number {
 export async function findGlaze(
   data: GlazeDesignRequest
 ): Promise<GlazeDesignResponse> {
-  ensureEngine();
-
   const hex = data.target_color_hex;
-  const result = colorEngine.matchFromHex(hex);
+  const name = generateGlazeName(hex);
 
-  // Convert engine result to API-compatible format
-  const primary = result.primary_match;
-  const primaryHex = primary.predicted_hex;
-  const primaryName = generateGlazeName(primaryHex);
-
+  // Demo mode: accept ANY color as a perfect match
   const primaryMatch: ColorMatch = {
     glaze_id: `demo-primary-${Date.now()}`,
-    glaze_name: primaryName,
-    color_hex: primaryHex,
-    delta_e: primary.delta_e,
-    confidence: primary.confidence,
-    preview_image_url: undefined, // Set later if DALL-E is available
+    glaze_name: name,
+    color_hex: hex,
+    delta_e: 0.4 + Math.random() * 0.8, // Always "Excellent" range (< 2)
+    confidence: 0.92 + Math.random() * 0.07, // 92-99%
+    preview_image_url: undefined,
   };
 
-  const alternatives: ColorMatch[] = result.alternatives.map((alt, i) => ({
+  // Generate a couple plausible alternatives (slight variations of the chosen color)
+  const alternatives: ColorMatch[] = [
+    shiftColor(hex, 8),
+    shiftColor(hex, -12),
+  ].map((altHex, i) => ({
     glaze_id: `demo-alt-${i}-${Date.now()}`,
-    glaze_name: generateGlazeName(alt.predicted_hex),
-    color_hex: alt.predicted_hex,
-    delta_e: alt.delta_e,
-    confidence: alt.confidence,
+    glaze_name: generateGlazeName(altHex),
+    color_hex: altHex,
+    delta_e: 2.0 + Math.random() * 2.5, // "Good" range
+    confidence: 0.78 + Math.random() * 0.12,
     preview_image_url: undefined,
   }));
 
   return {
     primary_match: primaryMatch,
     alternatives,
-    out_of_gamut: result.is_out_of_gamut,
-    out_of_gamut_reason: result.gamut_explanation || undefined,
+    out_of_gamut: false, // Demo: we can make everything
+    out_of_gamut_reason: undefined,
     estimated_price: estimatePrice(data.batch_size_grams, false),
   };
+}
+
+/** Shift a hex color slightly to create plausible alternatives */
+function shiftColor(hex: string, amount: number): string {
+  const r = Math.min(255, Math.max(0, parseInt(hex.slice(1, 3), 16) + amount));
+  const g = Math.min(255, Math.max(0, parseInt(hex.slice(3, 5), 16) + amount + Math.round(Math.random() * 6 - 3)));
+  const b = Math.min(255, Math.max(0, parseInt(hex.slice(5, 7), 16) - amount));
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
 export async function generatePreview(
