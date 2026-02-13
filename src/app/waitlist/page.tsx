@@ -149,12 +149,13 @@ export default function WaitlistPage() {
                 className="input-field"
               >
                 <option value="">Select...</option>
-                <option value="custom_color">Custom color matching</option>
-                <option value="small_batch">Small batch ordering</option>
-                <option value="glaze_library">Public glaze library</option>
-                <option value="studio_use">Studio / classroom use</option>
-                <option value="commercial">Commercial production</option>
-                <option value="other">Something else</option>
+                <option value="underglaze">Underglaze</option>
+                <option value="cone_6">Cone 6</option>
+                <option value="cone_10">Cone 10</option>
+                <option value="cone_04">Cone 04</option>
+                <option value="matte_satin">Matte/Satin</option>
+                <option value="effect_glazes">Effect Glazes</option>
+                <option value="sculpture">Sculpture</option>
               </select>
             </div>
 
