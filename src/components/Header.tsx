@@ -25,7 +25,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <img src="/logo.png" alt="Ware" className="h-10 w-auto" />
+            <img src="/logo.svg" alt="Ware" className="h-10 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
