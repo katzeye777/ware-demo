@@ -5,11 +5,11 @@ interface BatchSizeSelectorProps {
   onChange: (value: number) => void;
 }
 
-const PRICE_PER_400G = 15.0;
+const PRICE_PER_500G = 15.0;
 
 export default function BatchSizeSelector({ value, onChange }: BatchSizeSelectorProps) {
   const calculatePrice = (grams: number) => {
-    return ((grams / 400) * PRICE_PER_400G).toFixed(2);
+    return ((grams / 500) * PRICE_PER_500G).toFixed(2);
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
