@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #e4533d;
+  --brand-secondary: #857a6e;
+  --clay-light: #f6f5f4;
+  --clay-dark: #4d463e;
+}
+
+@layer base {
+  body {
+    @apply bg-clay-50 text-clay-900;
+  }
+
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  h4 {
+    @apply text-xl font-semibold;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-clay-200 hover:bg-clay-300 text-clay-900 font-semibold px-6 py-3 rounded-lg transition-colors;
+  }
+
+  .btn-outline {
+    @apply border-2 border-brand-500 text-brand-500 hover:bg-brand-50 font-semibold px-6 py-3 rounded-lg transition-colors;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-clay-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md p-6;
+  }
+
+  .color-swatch {
+    @apply rounded-lg shadow-sm border border-clay-200;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Print Styles for Manufacturing Pages */
+@media print {
+  @page {
+    margin: 0.5in;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  /* Ensure tables print properly */
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* Remove shadows and round corners for print */
+  .shadow-md,
+  .shadow-lg,
+  .rounded-lg,
+  .rounded-xl {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  /* Ensure checkboxes are visible in print */
+  input[type="checkbox"] {
+    -webkit-appearance: checkbox;
+    appearance: checkbox;
+  }
+}
