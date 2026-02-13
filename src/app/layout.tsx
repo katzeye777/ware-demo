@@ -48,7 +48,7 @@ export default function RootLayout({
             <div className="container mx-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                  <img src="/logo.svg" alt="Ware" className="h-8 w-auto mb-4 brightness-0 invert" />
+                  <img src="/logo-white.png" alt="Ware" className="h-8 w-auto mb-4" />
                   <p className="text-sm text-clay-300">
                     Custom ceramic glazes designed for your unique vision.
                   </p>
