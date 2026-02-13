@@ -26,7 +26,7 @@ export default function DesignPage() {
 
   const [color, setColor] = useState('#e4533d');
   const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>('glossy');
-  const [batchSize, setBatchSize] = useState(400);
+  const [batchSize, setBatchSize] = useState(500);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -205,7 +205,7 @@ export default function DesignPage() {
             <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-clay-900">
-                  AI Preview
+                  Glaze Preview
                 </h3>
                 <button
                   onClick={handleGeneratePreview}
@@ -230,9 +230,9 @@ export default function DesignPage() {
                   <div className="text-center text-clay-400">
                     <ImageIcon className="w-12 h-12 mx-auto mb-2" />
                     <p className="text-sm">
-                      Click &quot;Generate Preview&quot; to see an AI-rendered
+                      Click &quot;Generate Preview&quot; to see how this
                       <br />
-                      ceramic bowl with this glaze
+                      glaze looks on a ceramic bowl
                     </p>
                   </div>
                 </div>

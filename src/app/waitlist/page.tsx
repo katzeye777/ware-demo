@@ -176,8 +176,8 @@ export default function WaitlistPage() {
               desc: 'Pick any color and get a precise stain recipe matched to your glaze.',
             },
             {
-              title: 'AI Preview',
-              desc: 'See a photorealistic rendering of your glaze on ceramic before ordering.',
+              title: 'Visual Preview',
+              desc: 'See how your glaze looks on ceramic before ordering.',
             },
             {
               title: 'Ships Ready',

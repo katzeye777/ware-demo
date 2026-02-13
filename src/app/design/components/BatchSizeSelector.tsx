@@ -18,7 +18,7 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
-    if (newValue >= 400 && newValue <= 5000) {
+    if (newValue >= 500 && newValue <= 5000) {
       onChange(newValue);
     }
   };
@@ -43,7 +43,7 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
       <div className="relative">
         <input
           type="range"
-          min="400"
+          min="500"
           max="5000"
           step="50"
           value={value}
@@ -51,7 +51,7 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
           className="w-full h-2 bg-clay-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
         />
         <div className="flex justify-between mt-2 text-xs text-clay-500">
-          <span>400g</span>
+          <span>500g</span>
           <span>5000g</span>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
       <div className="flex items-center space-x-2">
         <input
           type="number"
-          min="400"
+          min="500"
           max="5000"
           step="50"
           value={value}
@@ -74,7 +74,7 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
         <p className="font-medium mb-1">Sizing Guide:</p>
         <ul className="text-xs space-y-1 text-blue-700">
-          <li>• 400g (minimum): 6-8 medium pieces</li>
+          <li>• 500g (minimum): 6-8 medium pieces</li>
           <li>• 1000g: 15-20 pieces or large forms</li>
           <li>• 2000g+: studio or classroom quantity</li>
         </ul>
