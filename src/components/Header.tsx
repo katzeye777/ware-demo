@@ -24,9 +24,8 @@ export default function Header() {
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 text-brand-600">
-            <Palette className="w-8 h-8" />
-            <span className="text-2xl font-bold">Ware</span>
+          <Link href="/" className="flex items-center space-x-2">
+            <img src="/logo.png" alt="Ware" className="h-10 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}

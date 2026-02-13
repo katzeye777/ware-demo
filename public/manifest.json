@@ -4,8 +4,8 @@
   "description": "Design your perfect ceramic glaze matched to your exact color vision",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f23",
-  "theme_color": "#6366f1",
+  "background_color": "#171717",
+  "theme_color": "#7c3aed",
   "orientation": "portrait-primary",
   "icons": [
     {

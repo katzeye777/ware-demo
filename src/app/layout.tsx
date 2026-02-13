@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#6366f1',
+  themeColor: '#7c3aed',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -44,11 +44,11 @@ export default function RootLayout({
           <main className="min-h-screen">
             {children}
           </main>
-          <footer className="bg-clay-800 text-clay-100 py-12 mt-20">
+          <footer className="bg-clay-900 text-clay-100 py-12 mt-20">
             <div className="container mx-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                  <h4 className="font-bold text-lg mb-4">Ware</h4>
+                  <img src="/logo.png" alt="Ware" className="h-8 w-auto mb-4 brightness-0 invert" />
                   <p className="text-sm text-clay-300">
                     Custom ceramic glazes designed for your unique vision.
                   </p>

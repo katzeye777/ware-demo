@@ -3,10 +3,10 @@
 @tailwind utilities;
 
 :root {
-  --brand-primary: #e4533d;
-  --brand-secondary: #857a6e;
-  --clay-light: #f6f5f4;
-  --clay-dark: #4d463e;
+  --brand-primary: #7c3aed;
+  --brand-secondary: #171717;
+  --clay-light: #fafafa;
+  --clay-dark: #171717;
 }
 
 @layer base {
