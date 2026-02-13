@@ -68,8 +68,8 @@ function generateGlazeName(hex: string): string {
 // ── Pricing logic ──
 
 function estimatePrice(batchSizeGrams: number, isPrivate: boolean): number {
-  // Base price: $0.08/gram, min $25
-  const base = Math.max(25, batchSizeGrams * 0.08);
+  // $15 per 400g, scales linearly
+  const base = (batchSizeGrams / 400) * 15;
   const privateSurcharge = isPrivate ? 4.99 : 0;
   return Math.round((base + privateSurcharge) * 100) / 100;
 }

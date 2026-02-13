@@ -5,11 +5,11 @@ interface BatchSizeSelectorProps {
   onChange: (value: number) => void;
 }
 
-const BASE_PRICE_PER_100G = 12.99; // Base price for 100g
+const PRICE_PER_400G = 15.0;
 
 export default function BatchSizeSelector({ value, onChange }: BatchSizeSelectorProps) {
   const calculatePrice = (grams: number) => {
-    return ((grams / 100) * BASE_PRICE_PER_100G).toFixed(2);
+    return ((grams / 400) * PRICE_PER_400G).toFixed(2);
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,7 +18,7 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
-    if (newValue >= 100 && newValue <= 5000) {
+    if (newValue >= 400 && newValue <= 5000) {
       onChange(newValue);
     }
   };
@@ -43,15 +43,15 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
       <div className="relative">
         <input
           type="range"
-          min="100"
+          min="400"
           max="5000"
-          step="25"
+          step="50"
           value={value}
           onChange={handleSliderChange}
           className="w-full h-2 bg-clay-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
         />
         <div className="flex justify-between mt-2 text-xs text-clay-500">
-          <span>100g</span>
+          <span>400g</span>
           <span>5000g</span>
         </div>
       </div>
@@ -60,9 +60,9 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
       <div className="flex items-center space-x-2">
         <input
           type="number"
-          min="100"
+          min="400"
           max="5000"
-          step="25"
+          step="50"
           value={value}
           onChange={handleInputChange}
           className="input-field text-center font-mono"
@@ -74,9 +74,9 @@ export default function BatchSizeSelector({ value, onChange }: BatchSizeSelector
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
         <p className="font-medium mb-1">Sizing Guide:</p>
         <ul className="text-xs space-y-1 text-blue-700">
-          <li>• 100-200g: 2-4 small pieces</li>
-          <li>• 375g (default): 6-8 medium pieces</li>
+          <li>• 400g (minimum): 6-8 medium pieces</li>
           <li>• 1000g: 15-20 pieces or large forms</li>
+          <li>• 2000g+: studio or classroom quantity</li>
         </ul>
       </div>
     </div>

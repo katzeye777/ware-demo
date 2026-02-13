@@ -26,7 +26,7 @@ export default function DesignPage() {
 
   const [color, setColor] = useState('#e4533d');
   const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>('glossy');
-  const [batchSize, setBatchSize] = useState(375);
+  const [batchSize, setBatchSize] = useState(400);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
