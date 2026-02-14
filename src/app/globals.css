@@ -63,6 +63,28 @@
   }
 }
 
+/* Large color picker — react-colorful sizing */
+.color-picker-large .react-colorful {
+  width: 100% !important;
+  max-width: 480px;
+  height: 360px !important;
+}
+
+.color-picker-large .react-colorful__saturation {
+  border-radius: 12px 12px 0 0;
+}
+
+.color-picker-large .react-colorful__hue {
+  height: 28px !important;
+  border-radius: 0 0 12px 12px;
+}
+
+.color-picker-large .react-colorful__hue-pointer,
+.color-picker-large .react-colorful__saturation-pointer {
+  width: 24px;
+  height: 24px;
+}
+
 /* Print Styles for Manufacturing Pages */
 @media print {
   @page {

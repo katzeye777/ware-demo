@@ -1,7 +1,7 @@
 'use client';
 
 import { GlazeDesignResponse, ColorMatch } from '@/lib/api';
-import { AlertTriangle, Check } from 'lucide-react';
+import { Check, Info } from 'lucide-react';
 
 interface ResultsPanelProps {
   result: GlazeDesignResponse;
@@ -30,7 +30,7 @@ export default function ResultsPanel({
       >
         {isPrimary && (
           <div className="bg-brand-500 text-white text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
-            Primary Match
+            Best Match
           </div>
         )}
 
@@ -50,7 +50,7 @@ export default function ResultsPanel({
           )}
         </div>
 
-        {/* Glaze Info */}
+        {/* Color Info */}
         <div className="space-y-3">
           <div>
             <h4 className="font-semibold text-lg text-clay-900">
@@ -117,21 +117,13 @@ export default function ResultsPanel({
 
   return (
     <div className="space-y-6">
-      {/* Out of Gamut Warning */}
+      {/* Out of gamut — subtle inline note, not an alarm */}
       {result.out_of_gamut && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
-          <div className="flex items-start space-x-3">
-            <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <h4 className="font-semibold text-yellow-800 mb-1">
-                Color Outside Available Range
-              </h4>
-              <p className="text-sm text-yellow-700">
-                {result.out_of_gamut_reason ||
-                  'The exact color you selected is not achievable with our current glaze palette. We\'ve found the closest possible matches below.'}
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center space-x-2 text-sm text-clay-500">
+          <Info className="w-4 h-4 flex-shrink-0" />
+          <span>
+            This exact shade isn&apos;t in our current palette — here are the closest colors we can produce.
+          </span>
         </div>
       )}
 
@@ -147,7 +139,7 @@ export default function ResultsPanel({
       {result.alternatives && result.alternatives.length > 0 && (
         <div>
           <h3 className="text-xl font-semibold text-clay-900 mb-4">
-            Alternative Matches
+            Other Options
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {result.alternatives.map(match => renderColorMatch(match))}
@@ -160,7 +152,7 @@ export default function ResultsPanel({
         <p className="font-medium mb-2">About Color Matching:</p>
         <ul className="text-xs space-y-1 text-blue-700">
           <li>• <strong>ΔE (Delta E)</strong>: Lower is better. ΔE &lt; 2 is considered imperceptible to the human eye.</li>
-          <li>• <strong>Confidence</strong>: Our algorithm's certainty in this match based on firing consistency data.</li>
+          <li>• <strong>Confidence</strong>: How closely the match is supported by our fired test data.</li>
           <li>• Colors may vary slightly depending on clay body, firing temperature, and kiln atmosphere.</li>
         </ul>
       </div>

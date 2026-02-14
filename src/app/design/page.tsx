@@ -144,11 +144,21 @@ export default function DesignPage() {
 
       {/* Design Form */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        {/* Left Column - Color Selection */}
-        <div className="lg:col-span-2">
+        {/* Left Column - Color Selection + Find Button */}
+        <div className="lg:col-span-2 space-y-6">
           <div className="card">
             <ColorPicker value={color} onChange={setColor} />
           </div>
+
+          {/* Find My Color Button — large, under the picker */}
+          <button
+            onClick={handleFindGlaze}
+            disabled={isLoading}
+            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 py-5 text-xl font-semibold rounded-xl"
+          >
+            <Sparkles className="w-6 h-6" />
+            <span>{isLoading ? 'Finding Your Color...' : 'Find My Color'}</span>
+          </button>
         </div>
 
         {/* Right Column - Options */}
@@ -178,16 +188,6 @@ export default function DesignPage() {
           <div className="card">
             <BatchSizeSelector value={batchSize} onChange={setBatchSize} />
           </div>
-
-          {/* Find Glaze Button */}
-          <button
-            onClick={handleFindGlaze}
-            disabled={isLoading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-          >
-            <Sparkles className="w-5 h-5" />
-            <span>{isLoading ? 'Finding Your Glaze...' : 'Find My Glaze'}</span>
-          </button>
         </div>
       </div>
 
@@ -283,6 +283,14 @@ export default function DesignPage() {
                 <span>Order This Glaze</span>
               </button>
             </div>
+
+            {/* TEMP: Generate Report — remove at deployment */}
+            <button
+              onClick={() => router.push(`/design/report?color=${encodeURIComponent(color)}`)}
+              className="w-full mt-3 border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>Generate Report</span>
+            </button>
           </div>
         </div>
       )}
@@ -296,7 +304,7 @@ export default function DesignPage() {
               Ready to Create?
             </h3>
             <p className="text-clay-600">
-              Select your color and preferences above, then click &quot;Find My Glaze&quot; to see matches
+              Select your color and preferences above, then click &quot;Find My Color&quot; to see matches
             </p>
           </div>
         </div>
