@@ -1,26 +1,35 @@
 /**
- * Minimal Service Worker for PWA installability.
+ * Service Worker for Ware PWA
  *
- * This is intentionally simple — just enough for Chrome/Safari
- * to show the "Install" prompt. For the demo, we don't need
- * offline caching or background sync.
+ * Provides offline caching and app-like experience.
+ * Network-first for pages, cache-first for static assets.
  */
 
-const CACHE_NAME = 'ware-demo-v1';
+const CACHE_NAME = 'ware-v2';
+const STATIC_ASSETS = [
+  '/',
+  '/design',
+  '/vision-board',
+  '/waitlist',
+  '/manifest.json',
+  '/logo.png',
+  '/logo-white.png',
+  '/favicon.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+];
 
-// Install event — cache essential assets
+// Install — pre-cache essential assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-      ]);
+      return cache.addAll(STATIC_ASSETS);
     })
   );
   self.skipWaiting();
 });
 
-// Activate event — clean up old caches
+// Activate — clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -34,27 +43,44 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event — network first, fallback to cache
+// Fetch — network first for pages, cache first for static assets
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests and API calls
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/')) return;
 
+  const url = new URL(event.request.url);
+
+  // Static assets (images, icons, CSS, JS) — cache first
+  if (url.pathname.match(/\.(png|jpg|jpeg|svg|ico|css|js|woff2?)$/)) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Pages — network first, cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses for offline fallback
         if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
       })
       .catch(() => {
-        // Network failed, try cache
-        return caches.match(event.request);
+        return caches.match(event.request).then((cached) => {
+          return cached || caches.match('/');
+        });
       })
   );
 });
