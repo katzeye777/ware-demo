@@ -307,6 +307,13 @@ export default function DesignPage() {
               </button>
             </div>
 
+            {/* Generate Report — calibration tool */}
+            <button
+              onClick={() => router.push(`/design/report?color=${encodeURIComponent(color)}`)}
+              className="w-full mt-3 border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>Generate Report</span>
+            </button>
           </div>
         </div>
       )}
