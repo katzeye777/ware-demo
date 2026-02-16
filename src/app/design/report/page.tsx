@@ -3,12 +3,11 @@
 /**
  * TEMPORARY: Recipe Report Page
  *
- * Shows the full compositional logic behind a color match:
- * - Target color → interpolated recipe
- * - k-NN neighbors used and their weights
- * - Per-stain contributions from the component model
- * - Interaction corrections
- * - Hybrid blend weights (k-NN vs component model)
+ * Shows the full logic behind a color match:
+ * - Target color → predicted result
+ * - Interpolated recipe with batch weights
+ * - k-NN neighbors, their weights, and confidence scores
+ * - Engine info (cone, atmosphere, data point count)
  *
  * This page will be removed at deployment.
  */
@@ -18,6 +17,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { colorEngine, stainDisplayName } from '@/lib/color-engine';
 import type { DetailedMatchResult } from '@/lib/color-engine';
 import { COLOR_TEST_DATA } from '@/lib/color-data';
+import { getFiringModel } from '@/lib/demo-api';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,9 +27,7 @@ function ReportContent() {
   const [detail, setDetail] = useState<DetailedMatchResult | null>(null);
 
   useEffect(() => {
-    if (!colorEngine.isLoaded) {
-      colorEngine.loadDataset(COLOR_TEST_DATA);
-    }
+    getFiringModel();
     const result = colorEngine.matchDetailedFromHex(targetHex);
     setDetail(result);
   }, [targetHex]);
@@ -60,59 +58,50 @@ function ReportContent() {
       <div className="text-center mb-8">
         <p className="text-xs text-clay-400 uppercase tracking-wider">Temporary Calibration Report</p>
         <h1 className="text-3xl font-bold text-clay-900 mt-1">Recipe Composition Report</h1>
-        <p className="text-sm text-clay-500 mt-2">Color Engine v3 &mdash; {COLOR_TEST_DATA.length} data points</p>
+        <p className="text-sm text-clay-500 mt-2">
+          Color Engine v{ColorEngine.VERSION} &mdash; Cone {detail.cone} {detail.atmosphere === 'ox' ? 'Oxidation' : 'Reduction'} &mdash; {detail.data_points} data points (2-dip masters)
+        </p>
       </div>
 
       {/* ── Section 1: Target → Result ── */}
       <section className="card mb-6">
-        <h2 className="text-lg font-bold text-clay-900 mb-4">1. Target &amp; Result</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <h2 className="text-lg font-bold text-clay-900 mb-4">1. Target &amp; Prediction</h2>
+        <div className="grid grid-cols-2 gap-6">
           <div>
             <p className="text-xs text-clay-500 mb-1">Target Color</p>
-            <div className="w-full h-20 rounded-lg color-swatch" style={{ backgroundColor: detail.target_hex }} />
+            <div className="w-full h-24 rounded-lg color-swatch" style={{ backgroundColor: detail.target_hex }} />
             <p className="text-xs font-mono mt-1">{detail.target_hex.toUpperCase()}</p>
             <p className="text-xs text-clay-500">{fmtLab(detail.target_lab)}</p>
           </div>
           <div>
-            <p className="text-xs text-clay-500 mb-1">Hybrid Prediction</p>
-            <div className="w-full h-20 rounded-lg color-swatch" style={{ backgroundColor: detail.knn_prediction.hex }} />
-            <p className="text-xs font-mono mt-1">{detail.knn_prediction.hex.toUpperCase()}</p>
-            <p className="text-xs text-clay-500">{fmtLab(detail.knn_prediction.lab)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-clay-500 mb-1">Component Model</p>
-            {detail.component_prediction ? (
-              <>
-                <div className="w-full h-20 rounded-lg color-swatch" style={{ backgroundColor: detail.component_prediction.hex }} />
-                <p className="text-xs font-mono mt-1">{detail.component_prediction.hex.toUpperCase()}</p>
-                <p className="text-xs text-clay-500">{fmtLab(detail.component_prediction.lab)}</p>
-              </>
-            ) : (
-              <div className="w-full h-20 rounded-lg bg-clay-100 flex items-center justify-center text-xs text-clay-400">N/A</div>
-            )}
-          </div>
-          <div>
-            <p className="text-xs text-clay-500 mb-1">Additive (no interactions)</p>
-            <div className="w-full h-20 rounded-lg color-swatch" style={{ backgroundColor: detail.additive_prediction.hex }} />
-            <p className="text-xs font-mono mt-1">{detail.additive_prediction.hex.toUpperCase()}</p>
-            <p className="text-xs text-clay-500">{fmtLab(detail.additive_prediction.lab)}</p>
+            <p className="text-xs text-clay-500 mb-1">Predicted Result</p>
+            <div className="w-full h-24 rounded-lg color-swatch" style={{ backgroundColor: detail.predicted_hex }} />
+            <p className="text-xs font-mono mt-1">{detail.predicted_hex.toUpperCase()}</p>
+            <p className="text-xs text-clay-500">{fmtLab(detail.predicted_lab)}</p>
           </div>
         </div>
 
         <div className="mt-4 bg-clay-50 rounded-lg p-3">
           <p className="text-xs font-medium text-clay-700">
-            Hybrid Blend: <span className="font-mono">{(detail.hybrid_weights.knn * 100).toFixed(0)}% k-NN</span> + <span className="font-mono">{(detail.hybrid_weights.component * 100).toFixed(0)}% Component Model</span>
+            Predicted &Delta;E: <span className={`font-mono ${detail.predicted_delta_e < 2 ? 'text-green-600' : detail.predicted_delta_e < 5 ? 'text-yellow-600' : 'text-red-600'}`}>
+              {detail.predicted_delta_e.toFixed(2)}
+            </span>
+            <span className="text-clay-500 ml-2">
+              {detail.predicted_delta_e < 2 ? '— imperceptible difference' :
+                detail.predicted_delta_e < 5 ? '— noticeable but good match' :
+                '— visible difference, may be outside stain gamut'}
+            </span>
           </p>
           <p className="text-xs text-clay-500 mt-1">
-            Nearest neighbor distance: {detail.nearest_neighbors[0]?.delta_e.toFixed(2)} &mdash;
-            {detail.hybrid_weights.knn > 0.7 ? ' close match, favoring k-NN interpolation' :
-              detail.hybrid_weights.knn > 0.4 ? ' moderate distance, balanced blend' :
-              ' far from training data, relying more on component model'}
+            Nearest tested tile: &Delta;E {detail.nearest_neighbors[0]?.delta_e.toFixed(2)} &mdash;
+            {detail.nearest_neighbors[0]?.delta_e < 2 ? ' very close to existing test data' :
+              detail.nearest_neighbors[0]?.delta_e < 5 ? ' moderate distance from test data' :
+              ' far from any tested recipe'}
           </p>
         </div>
       </section>
 
-      {/* ── Section 2: Interpolated Recipe (what gets batched) ── */}
+      {/* ── Section 2: Interpolated Recipe ── */}
       <section className="card mb-6">
         <h2 className="text-lg font-bold text-clay-900 mb-4">2. Interpolated Recipe (Batch Formula)</h2>
         <table className="w-full text-sm">
@@ -147,67 +136,12 @@ function ReportContent() {
         </table>
       </section>
 
-      {/* ── Section 3: Component Model Breakdown ── */}
+      {/* ── Section 3: k-NN Neighbors ── */}
       <section className="card mb-6">
-        <h2 className="text-lg font-bold text-clay-900 mb-4">3. Component Model — Per-Stain Contributions</h2>
+        <h2 className="text-lg font-bold text-clay-900 mb-4">3. Nearest Neighbors</h2>
         <p className="text-xs text-clay-500 mb-3">
-          Base white: L*{detail.base_lab[0].toFixed(1)} a*{detail.base_lab[1].toFixed(1)} b*{detail.base_lab[2].toFixed(1)} (clear glaze on porcelain)
-        </p>
-
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-clay-200">
-              <th className="text-left py-2 text-clay-600 font-medium">Stain</th>
-              <th className="text-right py-2 text-clay-600 font-medium">%</th>
-              <th className="text-right py-2 text-clay-600 font-medium">&Delta;L*</th>
-              <th className="text-right py-2 text-clay-600 font-medium">&Delta;a*</th>
-              <th className="text-right py-2 text-clay-600 font-medium">&Delta;b*</th>
-              <th className="text-left py-2 pl-3 text-clay-600 font-medium">Direction</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.stain_contributions.map((c) => (
-              <tr key={c.code} className="border-b border-clay-100">
-                <td className="py-2 font-medium">{c.name}</td>
-                <td className="py-2 text-right font-mono">{c.pct.toFixed(2)}</td>
-                <td className={`py-2 text-right font-mono ${c.delta_L < -5 ? 'text-red-600' : c.delta_L > 5 ? 'text-green-600' : ''}`}>
-                  {c.delta_L > 0 ? '+' : ''}{c.delta_L.toFixed(1)}
-                </td>
-                <td className={`py-2 text-right font-mono ${c.delta_a > 10 ? 'text-red-600' : c.delta_a < -10 ? 'text-green-600' : ''}`}>
-                  {c.delta_a > 0 ? '+' : ''}{c.delta_a.toFixed(1)}
-                </td>
-                <td className={`py-2 text-right font-mono ${c.delta_b > 10 ? 'text-yellow-600' : c.delta_b < -10 ? 'text-blue-600' : ''}`}>
-                  {c.delta_b > 0 ? '+' : ''}{c.delta_b.toFixed(1)}
-                </td>
-                <td className="py-2 pl-3 text-xs text-clay-500">
-                  {describeContribution(c)}
-                </td>
-              </tr>
-            ))}
-            {/* Interaction correction row */}
-            <tr className="border-t-2 border-clay-300 bg-clay-50">
-              <td className="py-2 font-medium text-clay-700">Interaction correction</td>
-              <td className="py-2"></td>
-              <td className="py-2 text-right font-mono">
-                {detail.interaction_correction.dL > 0 ? '+' : ''}{detail.interaction_correction.dL.toFixed(1)}
-              </td>
-              <td className="py-2 text-right font-mono">
-                {detail.interaction_correction.da > 0 ? '+' : ''}{detail.interaction_correction.da.toFixed(1)}
-              </td>
-              <td className="py-2 text-right font-mono">
-                {detail.interaction_correction.db > 0 ? '+' : ''}{detail.interaction_correction.db.toFixed(1)}
-              </td>
-              <td className="py-2 pl-3 text-xs text-clay-500">Learned from two-way blend data</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      {/* ── Section 4: k-NN Neighbors ── */}
-      <section className="card mb-6">
-        <h2 className="text-lg font-bold text-clay-900 mb-4">4. Nearest Neighbors (k-NN Input)</h2>
-        <p className="text-xs text-clay-500 mb-3">
-          The {detail.nearest_neighbors.length} closest tested tiles by CIEDE2000. Weights are inverse-distance-squared.
+          The {detail.nearest_neighbors.length} closest tested tiles by CIEDE2000. Weights are confidence-adjusted inverse-distance-squared.
+          Confidence reflects how consistent the tile color was (master vs image average agreement).
         </p>
 
         <div className="overflow-x-auto">
@@ -219,12 +153,13 @@ function ReportContent() {
                 <th className="text-left py-2 text-clay-600 font-medium">Recipe</th>
                 <th className="text-right py-2 text-clay-600 font-medium">&Delta;E</th>
                 <th className="text-right py-2 text-clay-600 font-medium">Weight</th>
+                <th className="text-right py-2 text-clay-600 font-medium">Conf.</th>
                 <th className="text-left py-2 text-clay-600 font-medium">Lab</th>
               </tr>
             </thead>
             <tbody>
               {detail.nearest_neighbors.map((n, i) => (
-                <tr key={i} className={`border-b border-clay-100 ${n.weight > 0.1 ? 'bg-brand-50' : ''}`}>
+                <tr key={i} className={`border-b border-clay-100 ${n.generatable && n.weight > 0.1 ? 'bg-brand-50' : ''} ${!n.generatable ? 'opacity-60' : ''}`}>
                   <td className="py-2 text-clay-500">{i + 1}</td>
                   <td className="py-2">
                     <div className="flex items-center space-x-2">
@@ -236,12 +171,16 @@ function ReportContent() {
                     {n.recipe.filter(s => s.pct > 0).map(s =>
                       `${stainDisplayName(s.code)} ${s.pct}%`
                     ).join(' + ')}
+                    {!n.generatable && <span className="ml-1 text-clay-400 italic">(ref)</span>}
                   </td>
                   <td className={`py-2 text-right font-mono ${n.delta_e < 2 ? 'text-green-600 font-bold' : n.delta_e < 5 ? 'text-yellow-600' : 'text-clay-500'}`}>
                     {n.delta_e.toFixed(2)}
                   </td>
                   <td className="py-2 text-right font-mono">
                     {(n.weight * 100).toFixed(1)}%
+                  </td>
+                  <td className={`py-2 text-right font-mono ${n.confidence >= 0.8 ? 'text-green-600' : n.confidence >= 0.5 ? 'text-yellow-600' : 'text-red-500'}`}>
+                    {(n.confidence * 100).toFixed(0)}%
                   </td>
                   <td className="py-2 text-xs font-mono text-clay-500">
                     {fmtLab(n.lab)}
@@ -253,25 +192,42 @@ function ReportContent() {
         </div>
       </section>
 
-      {/* ── Section 5: Engine Info ── */}
+      {/* ── Section 4: Engine Info ── */}
       <section className="card mb-6 bg-clay-50">
-        <h2 className="text-lg font-bold text-clay-900 mb-4">5. Engine Details</h2>
+        <h2 className="text-lg font-bold text-clay-900 mb-4">4. Engine Details</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-xs text-clay-500">Version</p>
-            <p className="font-mono font-medium">3.0.0</p>
+            <p className="font-mono font-medium">{ColorEngine.VERSION}</p>
           </div>
           <div>
-            <p className="text-xs text-clay-500">Data Points</p>
-            <p className="font-mono font-medium">{COLOR_TEST_DATA.length}</p>
+            <p className="text-xs text-clay-500">Firing Model</p>
+            <p className="font-mono font-medium">
+              Cone {detail.cone} {detail.atmosphere === 'ox' ? 'Oxidation' : 'Reduction'}
+            </p>
           </div>
           <div>
-            <p className="text-xs text-clay-500">Stain Codes</p>
-            <p className="font-mono font-medium">{detail.stain_codes.join(', ')}</p>
+            <p className="text-xs text-clay-500">Data Points (this model)</p>
+            <p className="font-mono font-medium">{detail.data_points}</p>
+            <p className="text-xs text-clay-400">
+              {colorEngine.generatablePointCount} generatable + {colorEngine.referencePointCount} reference
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-clay-500">Data Source</p>
+            <p className="font-mono font-medium">2-dip master points</p>
+          </div>
+          <div>
+            <p className="text-xs text-clay-500">Base Stains</p>
+            <p className="font-mono font-medium text-xs">{detail.stain_codes.join(', ')}</p>
           </div>
           <div>
             <p className="text-xs text-clay-500">k-NN Neighbors</p>
             <p className="font-mono font-medium">{detail.nearest_neighbors.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-clay-500">Total Data (all models)</p>
+            <p className="font-mono font-medium">{COLOR_TEST_DATA.length}</p>
           </div>
         </div>
       </section>
@@ -283,16 +239,8 @@ function ReportContent() {
   );
 }
 
-function describeContribution(c: { delta_L: number; delta_a: number; delta_b: number }): string {
-  const parts: string[] = [];
-  if (c.delta_L < -10) parts.push('darkens');
-  else if (c.delta_L > 10) parts.push('lightens');
-  if (c.delta_a > 10) parts.push('adds red');
-  else if (c.delta_a < -10) parts.push('adds green');
-  if (c.delta_b > 10) parts.push('adds yellow');
-  else if (c.delta_b < -10) parts.push('adds blue');
-  return parts.length > 0 ? parts.join(', ') : 'subtle shift';
-}
+// Need to import ColorEngine class for VERSION access
+import { ColorEngine } from '@/lib/color-engine';
 
 export default function ReportPage() {
   return (

@@ -1,9 +1,15 @@
 /**
  * Demo API Layer — Now powered by the real color engine.
  *
- * Runs entirely in the browser using 814 real fired test data points.
+ * Runs entirely in the browser using real fired test data points.
  * The color engine does k-NN + IDW interpolation to generate new recipes
  * and predict their fired colors.
+ *
+ * Models are separated by cone temperature and atmosphere:
+ *   - Cone 6 oxidation (default) — 774 data points
+ *   - Cone 10 oxidation — 40 data points
+ *   - Reduction data will be added when available
+ * Cone 6 and cone 10 are never mixed — they are separate firing environments.
  */
 
 import type {
@@ -17,14 +23,36 @@ import type { ColorMatch as EngineColorMatch } from './color-engine';
 import { COLOR_TEST_DATA } from './color-data';
 
 // ── Initialize color engine on first import ──
+// Defaults to cone 6 oxidation. Re-loads when user changes cone or atmosphere.
 
-let engineReady = false;
+let loadedCone: number = 0;
+let loadedAtmosphere: string = '';
 
-function ensureEngineLoaded() {
-  if (!engineReady) {
-    colorEngine.loadDataset(COLOR_TEST_DATA);
-    engineReady = true;
+function ensureEngineLoaded(cone: number = 6, atmosphere: string = 'ox') {
+  if (loadedCone !== cone || loadedAtmosphere !== atmosphere) {
+    colorEngine.loadDataset(COLOR_TEST_DATA, cone, atmosphere);
+    loadedCone = cone;
+    loadedAtmosphere = atmosphere;
   }
+}
+
+/**
+ * Change the active firing model. Call this when the user selects
+ * a different cone or atmosphere. The engine will reload with only
+ * the matching data — no cross-pollination.
+ */
+export function setFiringModel(cone: number = 6, atmosphere: string = 'ox') {
+  ensureEngineLoaded(cone, atmosphere);
+}
+
+/** Get the current firing model info. */
+export function getFiringModel(): { cone: number; atmosphere: string; dataPoints: number } {
+  ensureEngineLoaded(); // ensure loaded with at least defaults
+  return {
+    cone: colorEngine.cone,
+    atmosphere: colorEngine.atmosphere,
+    dataPoints: colorEngine.dataPointCount,
+  };
 }
 
 // ── Cheeky glaze name generator ──
@@ -257,7 +285,7 @@ function generateGlazeName(hex: string, index: number): string {
 // ── Pricing logic ──
 
 function estimatePrice(batchSizeGrams: number, isPrivate: boolean): number {
-  const base = (batchSizeGrams / 500) * 15;
+  const base = (batchSizeGrams / 350) * 15;
   const privateSurcharge = isPrivate ? 4.99 : 0;
   return Math.round((base + privateSurcharge) * 100) / 100;
 }
@@ -280,7 +308,9 @@ function engineToApiMatch(match: EngineColorMatch, index: number): APIColorMatch
 export async function findGlaze(
   data: GlazeDesignRequest
 ): Promise<GlazeDesignResponse> {
-  ensureEngineLoaded();
+  // Use cone from request if provided, otherwise default to cone 6 oxidation
+  const cone = data.firing_temp_cone ? Number(data.firing_temp_cone) : 6;
+  ensureEngineLoaded(cone, loadedAtmosphere || 'ox');
 
   const result = colorEngine.matchFromHex(data.target_color_hex);
 

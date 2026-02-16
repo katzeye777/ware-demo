@@ -34,3 +34,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 public/icons/*.bak
+
+# local development artifacts
+/data/
+/scripts/

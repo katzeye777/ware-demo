@@ -1,16 +1,18 @@
 /**
- * Color Engine v3 — Multi-component predictive blending.
+ * Color Engine v4 — Confidence-weighted k-NN with CIEDE2000.
  *
- * Takes a target color and returns an interpolated stain recipe with
- * confidence, ΔE, and alternatives. Uses CIE Lab with CIEDE2000.
+ * Built on 2-dip master points: expert-selected color data from fired test tiles.
+ * Each data point carries a confidence score (agreement between master pick
+ * and image average). The engine uses confidence to weight its predictions.
  *
- * Key features:
- *   - Stain codes discovered from data — no hardcoded list
- *   - Recipes are variable-length arrays of {code, pct} pairs
- *   - Multi-component prediction: can predict three-way+ blends from
- *     two-way training data using component contribution modeling
- *   - k-NN with CIEDE2000 + IDW recipe interpolation
- *   - Forward prediction validates interpolated recipes
+ * Models are separated by cone and atmosphere — never cross-pollinated.
+ * Cone 6 oxidation, cone 10 oxidation, cone 6 reduction, etc. are independent.
+ *
+ * Prediction approach:
+ *   - k-NN search in CIE Lab space using CIEDE2000 (perceptual distance)
+ *   - Confidence-weighted IDW recipe interpolation from neighbors
+ *   - Forward prediction validates the interpolated recipe
+ *   - No component model or interaction corrections — clean k-NN only
  *
  * Runs entirely in the browser — no server needed.
  */
@@ -171,7 +173,6 @@ export function deltaE2000(
 
 // ─── Data Structures ─────────────────────────────────
 
-/** A recipe as returned by the engine — array of stain components. */
 export type Recipe = StainComponent[];
 
 export interface ColorMatch {
@@ -190,44 +191,56 @@ export interface ColorMatchResult {
   gamut_explanation: string;
 }
 
-/** TEMPORARY: Detailed match result for recipe report / calibration review. */
 export interface DetailedNeighbor {
   recipe: Recipe;
   lab: [number, number, number];
   hex: string;
   delta_e: number;
   weight: number;
+  confidence: number;
+  generatable: boolean;
   cone: number;
-}
-
-export interface StainContributionDetail {
-  code: string;
-  name: string;
-  pct: number;
-  delta_L: number;
-  delta_a: number;
-  delta_b: number;
 }
 
 export interface DetailedMatchResult {
   target_hex: string;
   target_lab: [number, number, number];
   interpolated_recipe: Recipe;
-  knn_prediction: { lab: [number, number, number]; hex: string };
-  component_prediction: { lab: [number, number, number]; hex: string } | null;
-  additive_prediction: { lab: [number, number, number]; hex: string };
-  base_lab: [number, number, number];
-  stain_contributions: StainContributionDetail[];
-  interaction_correction: { dL: number; da: number; db: number };
-  hybrid_weights: { knn: number; component: number };
+  predicted_lab: [number, number, number];
+  predicted_hex: string;
+  predicted_delta_e: number;
   nearest_neighbors: DetailedNeighbor[];
   stain_codes: string[];
+  cone: number;
+  atmosphere: string;
+  data_points: number;
 }
 
-// ─── Stain name lookup (for display) ─────────────────
+// ─── Stain name lookup ───────────────────────────────
 
 const STAIN_NAMES: Record<string, string> = {
+  '6000': 'Shell Pink',
+  '6001': 'Alpine Rose',
+  '6003': 'Crimson',
+  '6006': 'Deep Crimson',
+  '6020': 'Manganese Alumina Pink',
+  '6021': 'Dark Red',
+  '6025': 'Coral Red',
   '6026': 'Lobster',
+  '6027': 'Tangerine',
+  '6028': 'Orange',
+  '6030': 'Mango',
+  '6032': 'Coral',
+  '6065': 'Chrome Alumina (Pink)',
+  '6069': 'Dark Coral',
+  '6088': 'Dark Red',
+  '6097': 'Dark Red',
+  '6100': 'Woodland',
+  '6101': 'Chestnut',
+  '6103': 'Golden',
+  '6107': 'Dark Golden',
+  '6264': 'Victoria Green',
+  '6364': 'Turquoise',
   '6388': 'Mazzerine',
   '6450': 'Praseodymium',
   '6600': 'Black',
@@ -242,285 +255,88 @@ export function stainDisplayName(code: string): string {
 
 const DELTA_E_THRESHOLD = 5.0;
 const MAX_STAIN_PCT = 15.0;
-
-/**
- * Stain contribution model: for each stain, we learn how it shifts Lab
- * values as a function of percentage. Built from single-stain data and
- * refined with two-way blend interaction data.
- */
-interface StainContribution {
-  code: string;
-  /** Single-stain Lab curves: pct → Lab delta from base white */
-  singleCurve: { pct: number; dL: number; da: number; db: number }[];
-  /** Interaction corrections: stainB → pct pairs → Lab correction */
-  interactions: Map<string, { pctA: number; pctB: number; dL: number; da: number; db: number }[]>;
-}
+const K_NEIGHBORS = 8;
 
 export class ColorEngine {
-  static readonly VERSION = '3.0.0';
+  static readonly VERSION = '4.3.0';
 
-  private labPoints: number[][] = [];
-  private recipeVectors: number[][] = [];  // [N][numStainCodes] flattened recipe vectors
-  private recipes: Recipe[] = [];          // [N] original recipes
-  private stainCodes: string[] = [];       // ordered list of discovered stain codes
+  // All data points (generatable + reference) for Lab-space neighbor search
+  private labPoints: [number, number, number][] = [];
+  private recipes: Recipe[] = [];
+  private confidences: number[] = [];
+  private generatable: boolean[] = [];
+
+  // Only base stain codes are used for recipe vectors
+  private stainCodes: string[] = [];
+  private recipeVectors: number[][] = [];
+
   private loaded = false;
-
-  /** Base white Lab (glaze with no stain) — estimated from lightest data points */
-  private baseLab: [number, number, number] = [92, -1, 5];
-
-  /** Per-stain contribution models */
-  private stainModels: Map<string, StainContribution> = new Map();
+  private _cone: number = 6;
+  private _atmosphere: string = 'ox';
+  private _dataPointCount = 0;
+  private _generatableCount = 0;
+  private _referenceCount = 0;
 
   /**
-   * Load real test data. Discovers stain codes from the data itself.
-   * Each recipe is flattened into a fixed-length vector for distance calculations.
-   * Also builds per-stain contribution models for multi-component prediction.
+   * Base stains — the only stains the engine can output in recipes.
+   * Extra stain data is kept for color landscape awareness but never
+   * appears in generated recipes.
    */
-  loadDataset(data: ColorDataPoint[]): number {
-    // Discover all stain codes
-    const codeSet = new Set<string>();
-    for (const d of data) {
-      for (const s of d.recipe) codeSet.add(s.code);
-    }
-    this.stainCodes = [...codeSet].sort();
+  static readonly BASE_STAINS = new Set(['6026', '6264', '6364', '6388', '6450', '6600', 'zircopax']);
 
-    // Build lookup: code → index
+  /**
+   * Load data filtered by cone and atmosphere.
+   * Only matching data is loaded — models are never mixed.
+   *
+   * ALL data points participate in Lab-space neighbor search.
+   * Only generatable points (base stains) are used for recipe interpolation.
+   */
+  loadDataset(data: ColorDataPoint[], cone: number = 6, atmosphere: string = 'ox'): number {
+    this._cone = cone;
+    this._atmosphere = atmosphere;
+
+    const filtered = data.filter(d => d.cone === cone && d.atmosphere === atmosphere);
+
+    // Recipe vectors use only the base stain codes
+    this.stainCodes = [...ColorEngine.BASE_STAINS].sort();
     const codeIndex = new Map<string, number>();
     this.stainCodes.forEach((c, i) => codeIndex.set(c, i));
     const dim = this.stainCodes.length;
 
     this.labPoints = [];
-    this.recipeVectors = [];
     this.recipes = [];
+    this.confidences = [];
+    this.generatable = [];
+    this.recipeVectors = [];
 
-    for (const d of data) {
+    for (const d of filtered) {
       this.labPoints.push([d.lab[0], d.lab[1], d.lab[2]]);
       this.recipes.push(d.recipe);
+      this.confidences.push(d.confidence);
+      this.generatable.push(d.generatable);
 
-      // Flatten recipe to vector
+      // Recipe vector: only base stains get slots.
+      // Reference points get zero vectors (they can't contribute recipes).
       const vec = new Array(dim).fill(0);
-      for (const s of d.recipe) {
-        const idx = codeIndex.get(s.code);
-        if (idx !== undefined) vec[idx] = s.pct;
+      if (d.generatable) {
+        for (const s of d.recipe) {
+          const idx = codeIndex.get(s.code);
+          if (idx !== undefined) vec[idx] = s.pct;
+        }
       }
       this.recipeVectors.push(vec);
     }
 
-    // Build stain contribution models
-    this.buildStainModels(data);
-
+    this._dataPointCount = filtered.length;
+    this._generatableCount = filtered.filter(d => d.generatable).length;
+    this._referenceCount = this._dataPointCount - this._generatableCount;
     this.loaded = true;
-    return data.length;
+    return filtered.length;
   }
 
   /**
-   * Build per-stain contribution models from the dataset.
-   * - Single-stain entries give us direct pct → Lab curves
-   * - Two-way blends give us interaction correction data
-   * - Base white is a constant for our glaze system (clear glaze on porcelain)
+   * Convert a recipe to a fixed-length vector in recipe space.
    */
-  private buildStainModels(data: ColorDataPoint[]) {
-    // Base white: pure clear glaze on porcelain — a known constant.
-    // L*~90, slightly warm. We do NOT estimate this from low-concentration
-    // data because even 0.1% of some stains (e.g. Mazzerine) produce strong color.
-    // This is the "zero point" from which all stain additions push.
-    this.baseLab = [90, -1, 5];
-
-    // Separate single-stain and two-way blend data
-    const singleStainData = new Map<string, { pct: number; lab: number[] }[]>();
-    const twoWayData: { codes: [string, string]; pcts: [number, number]; lab: number[] }[] = [];
-
-    for (const d of data) {
-      const stains = d.recipe.filter(s => s.pct > 0);
-      if (stains.length === 1) {
-        const code = stains[0].code;
-        if (!singleStainData.has(code)) singleStainData.set(code, []);
-        singleStainData.get(code)!.push({ pct: stains[0].pct, lab: d.lab });
-      } else if (stains.length === 2) {
-        const sorted = stains.sort((a, b) => a.code.localeCompare(b.code));
-        twoWayData.push({
-          codes: [sorted[0].code, sorted[1].code],
-          pcts: [sorted[0].pct, sorted[1].pct],
-          lab: d.lab,
-        });
-      }
-    }
-
-    // Build single-stain curves
-    for (const code of this.stainCodes) {
-      const entries = singleStainData.get(code) || [];
-      const curve = entries.map(e => ({
-        pct: e.pct,
-        dL: e.lab[0] - this.baseLab[0],
-        da: e.lab[1] - this.baseLab[1],
-        db: e.lab[2] - this.baseLab[2],
-      })).sort((a, b) => a.pct - b.pct);
-
-      const model: StainContribution = {
-        code,
-        singleCurve: curve,
-        interactions: new Map(),
-      };
-
-      this.stainModels.set(code, model);
-    }
-
-    // Build interaction corrections from two-way blends:
-    // interaction = actual Lab - (base + singleA contribution + singleB contribution)
-    for (const tw of twoWayData) {
-      const [codeA, codeB] = tw.codes;
-      const [pctA, pctB] = tw.pcts;
-
-      const predA = this.interpolateSingleCurve(codeA, pctA);
-      const predB = this.interpolateSingleCurve(codeB, pctB);
-
-      if (predA && predB) {
-        // Predicted without interaction
-        const predL = this.baseLab[0] + predA.dL + predB.dL;
-        const preda = this.baseLab[1] + predA.da + predB.da;
-        const predb = this.baseLab[2] + predA.db + predB.db;
-
-        // Correction = actual - predicted
-        const correction = {
-          pctA, pctB,
-          dL: tw.lab[0] - predL,
-          da: tw.lab[1] - preda,
-          db: tw.lab[2] - predb,
-        };
-
-        const modelA = this.stainModels.get(codeA)!;
-        if (!modelA.interactions.has(codeB)) modelA.interactions.set(codeB, []);
-        modelA.interactions.get(codeB)!.push(correction);
-      }
-    }
-  }
-
-  /**
-   * Interpolate a single-stain contribution curve at a given percentage.
-   */
-  private interpolateSingleCurve(code: string, pct: number): { dL: number; da: number; db: number } | null {
-    const model = this.stainModels.get(code);
-    if (!model || model.singleCurve.length === 0) return null;
-
-    const curve = model.singleCurve;
-
-    // Exact match
-    const exact = curve.find(c => Math.abs(c.pct - pct) < 0.01);
-    if (exact) return { dL: exact.dL, da: exact.da, db: exact.db };
-
-    // Interpolate between nearest points
-    let below = curve[0];
-    let above = curve[curve.length - 1];
-
-    for (const c of curve) {
-      if (c.pct <= pct && c.pct >= below.pct) below = c;
-      if (c.pct >= pct && c.pct <= above.pct) above = c;
-    }
-
-    if (below.pct === above.pct) {
-      return { dL: below.dL, da: below.da, db: below.db };
-    }
-
-    // Linear scale — for extrapolation beyond our data range, scale linearly
-    if (pct < curve[0].pct) {
-      const scale = pct / curve[0].pct;
-      return { dL: curve[0].dL * scale, da: curve[0].da * scale, db: curve[0].db * scale };
-    }
-    if (pct > curve[curve.length - 1].pct) {
-      const last = curve[curve.length - 1];
-      const scale = pct / last.pct;
-      return { dL: last.dL * scale, da: last.da * scale, db: last.db * scale };
-    }
-
-    const t = (pct - below.pct) / (above.pct - below.pct);
-    return {
-      dL: below.dL + t * (above.dL - below.dL),
-      da: below.da + t * (above.da - below.da),
-      db: below.db + t * (above.db - below.db),
-    };
-  }
-
-  /**
-   * Predict color from a recipe using the component contribution model.
-   * For multi-component recipes, sums individual stain contributions
-   * and adds learned pairwise interaction corrections where available.
-   *
-   * This allows us to predict three-way+ blends from two-way data.
-   */
-  predictLabFromComponents(recipe: Recipe): [number, number, number] | null {
-    const stains = recipe.filter(s => s.pct > 0);
-    if (stains.length === 0) return [...this.baseLab] as [number, number, number];
-
-    // Sum individual contributions
-    let totalDL = 0, totalDa = 0, totalDb = 0;
-    let hasContribution = false;
-
-    for (const s of stains) {
-      const contrib = this.interpolateSingleCurve(s.code, s.pct);
-      if (contrib) {
-        totalDL += contrib.dL;
-        totalDa += contrib.da;
-        totalDb += contrib.db;
-        hasContribution = true;
-      }
-    }
-
-    if (!hasContribution) return null;
-
-    // Add pairwise interaction corrections (learned from two-way blends)
-    for (let i = 0; i < stains.length; i++) {
-      for (let j = i + 1; j < stains.length; j++) {
-        const [sA, sB] = [stains[i], stains[j]].sort((a, b) => a.code.localeCompare(b.code));
-        const modelA = this.stainModels.get(sA.code);
-        if (!modelA) continue;
-
-        const corrections = modelA.interactions.get(sB.code);
-        if (!corrections || corrections.length === 0) continue;
-
-        // Find nearest interaction correction by pct distance
-        const correction = this.interpolateInteraction(corrections, sA.pct, sB.pct);
-        if (correction) {
-          totalDL += correction.dL;
-          totalDa += correction.da;
-          totalDb += correction.db;
-        }
-      }
-    }
-
-    return [
-      Math.max(0, Math.min(100, this.baseLab[0] + totalDL)),
-      this.baseLab[1] + totalDa,
-      this.baseLab[2] + totalDb,
-    ];
-  }
-
-  /**
-   * Interpolate a pairwise interaction correction at given percentages.
-   */
-  private interpolateInteraction(
-    corrections: { pctA: number; pctB: number; dL: number; da: number; db: number }[],
-    pctA: number,
-    pctB: number,
-  ): { dL: number; da: number; db: number } | null {
-    if (corrections.length === 0) return null;
-
-    // IDW in 2D pct space
-    let wSum = 0;
-    let dL = 0, da = 0, db = 0;
-
-    for (const c of corrections) {
-      const dist = Math.sqrt((c.pctA - pctA) ** 2 + (c.pctB - pctB) ** 2);
-      const w = 1 / (dist + 0.1);
-      wSum += w;
-      dL += w * c.dL;
-      da += w * c.da;
-      db += w * c.db;
-    }
-
-    return { dL: dL / wSum, da: da / wSum, db: db / wSum };
-  }
-
-  /** Convert a Recipe to a vector in recipe space. */
   private recipeToVector(recipe: Recipe): number[] {
     const vec = new Array(this.stainCodes.length).fill(0);
     for (const s of recipe) {
@@ -530,7 +346,9 @@ export class ColorEngine {
     return vec;
   }
 
-  /** Convert a recipe vector back to a Recipe (sparse representation). */
+  /**
+   * Convert a recipe vector back to a sparse Recipe.
+   */
   private vectorToRecipe(vec: number[]): Recipe {
     const recipe: Recipe = [];
     for (let i = 0; i < vec.length; i++) {
@@ -541,166 +359,150 @@ export class ColorEngine {
         });
       }
     }
-    // Sort by percentage descending
     recipe.sort((a, b) => b.pct - a.pct);
     return recipe;
   }
 
   /**
-   * Forward prediction: recipe → predicted Lab color.
-   *
-   * Uses a hybrid approach:
-   *   1. k-NN in recipe space (works great when training data is close)
-   *   2. Component contribution model (works for novel combinations)
-   *   3. Blend of both, weighted by k-NN distance (closer neighbors → more k-NN)
+   * Find the k nearest neighbors to a target Lab color.
+   * ALL data points (generatable + reference) participate in the search.
+   * Returns neighbors sorted by ΔE with confidence-weighted IDW weights.
    */
-  private predictLabFromRecipe(recipeVec: number[]): [number, number, number] {
-    if (!this.loaded) throw new Error('Color engine not loaded');
+  private findNeighbors(
+    targetLab: [number, number, number],
+    k: number = K_NEIGHBORS,
+  ): { index: number; de: number; weight: number; generatable: boolean }[] {
+    const distances = this.labPoints.map((pt, i) => ({
+      de: deltaE2000(targetLab, pt),
+      index: i,
+    }));
 
-    const dim = recipeVec.length;
-    const dists = this.recipeVectors.map(rv => {
-      let sum = 0;
-      for (let i = 0; i < dim; i++) sum += (rv[i] - recipeVec[i]) ** 2;
-      return Math.sqrt(sum);
+    distances.sort((a, b) => a.de - b.de);
+    const nearest = distances.slice(0, Math.min(k, distances.length));
+
+    // Confidence-weighted IDW: weight = confidence / (ΔE² + ε)
+    // High-confidence tiles get more influence. Variable tiles get less.
+    const weights = nearest.map(n => {
+      const conf = this.confidences[n.index];
+      return conf / (n.de * n.de + 1e-6);
     });
-
-    const k = Math.min(5, dists.length);
-    const nearest = dists
-      .map((d, i) => ({ d, i }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, k);
-
-    // Exact match
-    if (nearest[0].d < 1e-6) {
-      const pt = this.labPoints[nearest[0].i];
-      return [pt[0], pt[1], pt[2]];
-    }
-
-    // k-NN IDW interpolation
-    const weights = nearest.map(x => 1 / (x.d + 1e-8));
     const wSum = weights.reduce((a, b) => a + b, 0);
 
-    let knnL = 0, knnA = 0, knnB = 0;
-    for (let j = 0; j < k; j++) {
-      const w = weights[j] / wSum;
-      const pt = this.labPoints[nearest[j].i];
-      knnL += w * pt[0];
-      knnA += w * pt[1];
-      knnB += w * pt[2];
-    }
-
-    // Component model prediction
-    const recipe = this.vectorToRecipe(recipeVec);
-    const componentPred = this.predictLabFromComponents(recipe);
-
-    // If component model fails, fall back to k-NN only
-    if (!componentPred) return [knnL, knnA, knnB];
-
-    // Blend based on k-NN distance: close neighbors → trust k-NN more
-    // Far from any training data → trust component model more
-    const minDist = nearest[0].d;
-    // At distance 0 → 100% k-NN, at distance 5+ → 50/50, at distance 15+ → 80% component
-    const knnWeight = Math.max(0.2, Math.min(1.0, 1.0 / (1.0 + minDist * 0.15)));
-    const compWeight = 1 - knnWeight;
-
-    return [
-      knnL * knnWeight + componentPred[0] * compWeight,
-      knnA * knnWeight + componentPred[1] * compWeight,
-      knnB * knnWeight + componentPred[2] * compWeight,
-    ];
+    return nearest.map((n, j) => ({
+      index: n.index,
+      de: n.de,
+      weight: weights[j] / wSum,
+      generatable: this.generatable[n.index],
+    }));
   }
 
-  /** Main matching: target Lab → interpolated recipe + alternatives. */
-  matchColor(targetLab: [number, number, number]): ColorMatchResult {
-    if (!this.loaded) throw new Error('Color engine not loaded with dataset');
-
-    const k = Math.min(12, this.labPoints.length);
+  /**
+   * Interpolate a recipe from weighted neighbors.
+   * ONLY generatable neighbors contribute to recipe interpolation.
+   * Reference points (extra stains) have zero recipe vectors and are skipped.
+   */
+  private interpolateRecipe(
+    neighbors: { index: number; de: number; weight: number; generatable: boolean }[],
+  ): number[] {
     const dim = this.stainCodes.length;
+    const vec = new Array(dim).fill(0);
 
-    // Find k nearest neighbors using CIEDE2000 (perceptual distance)
-    const distances = this.labPoints.map((pt, i) => ({
-      de: deltaE2000(targetLab, [pt[0], pt[1], pt[2]]),
-      index: i,
-    })).sort((a, b) => a.de - b.de).slice(0, k);
+    // Re-weight using only generatable neighbors
+    const genNeighbors = neighbors.filter(n => n.generatable);
+    if (genNeighbors.length === 0) {
+      // No generatable neighbors — return empty recipe
+      return vec;
+    }
 
-    // IDW interpolation of top-k recipes (power=2 via 1/de²)
-    const weights = distances.map(d => 1 / (d.de * d.de + 1e-8));
-    const wSum = weights.reduce((a, b) => a + b, 0);
+    const genWSum = genNeighbors.reduce((s, n) => s + n.weight, 0);
 
-    const primaryVec = new Array(dim).fill(0);
-    for (let j = 0; j < k; j++) {
-      const w = weights[j] / wSum;
-      const rv = this.recipeVectors[distances[j].index];
+    for (const n of genNeighbors) {
+      const w = n.weight / genWSum; // Re-normalized weight among generatable only
+      const rv = this.recipeVectors[n.index];
       for (let i = 0; i < dim; i++) {
-        primaryVec[i] += w * rv[i];
+        vec[i] += w * rv[i];
       }
     }
+
     // Clamp
     for (let i = 0; i < dim; i++) {
-      primaryVec[i] = Math.max(0, Math.min(MAX_STAIN_PCT, primaryVec[i]));
+      vec[i] = Math.max(0, Math.min(MAX_STAIN_PCT, vec[i]));
     }
 
+    return vec;
+  }
+
+  /**
+   * Predict Lab color directly from the weighted neighbor average.
+   * Uses the same neighbors that produced the recipe — no second-pass lookup.
+   * The neighbors' Lab values are real measured colors from fired tiles,
+   * so their weighted average is the best estimate of what the recipe will produce.
+   */
+  private predictLabFromNeighbors(
+    neighbors: { index: number; de: number; weight: number; generatable: boolean }[],
+  ): [number, number, number] {
+    let L = 0, a = 0, b = 0;
+    for (const n of neighbors) {
+      const pt = this.labPoints[n.index];
+      L += n.weight * pt[0];
+      a += n.weight * pt[1];
+      b += n.weight * pt[2];
+    }
+    return [L, a, b];
+  }
+
+  /**
+   * Main matching: target Lab → recipe + alternatives.
+   */
+  matchColor(targetLab: [number, number, number]): ColorMatchResult {
+    if (!this.loaded) throw new Error('Color engine not loaded');
+
+    const neighbors = this.findNeighbors(targetLab);
+    const dim = this.stainCodes.length;
+
+    // Interpolated recipe from confidence-weighted neighbors
+    const primaryVec = this.interpolateRecipe(neighbors);
     const interpolatedRecipe = this.vectorToRecipe(primaryVec);
-    const predictedLab = this.predictLabFromRecipe(primaryVec);
+    // Predicted color = weighted average of neighbors' actual measured Lab values
+    const predictedLab = this.predictLabFromNeighbors(neighbors);
     const predictedHex = rgbToHex(...labToRgb(...predictedLab));
     const interpolatedDe = deltaE2000(targetLab, predictedLab);
 
-    // Build candidate list: interpolated + component model + individual nearest neighbors
+    // Average confidence of the neighborhood
+    const avgConfidence = neighbors.slice(0, 5).reduce((s, n) => s + this.confidences[n.index] * n.weight, 0)
+      / neighbors.slice(0, 5).reduce((s, n) => s + n.weight, 0);
+
     const candidates: ColorMatch[] = [];
 
-    // Add the interpolated result
+    // Interpolated result
     candidates.push({
       recipe: interpolatedRecipe,
       predicted_lab: predictedLab,
       predicted_hex: predictedHex,
       delta_e: round2(interpolatedDe),
-      confidence: round3(deToConfidence(interpolatedDe)),
+      confidence: round3(avgConfidence * deToConfidence(interpolatedDe)),
       explanation: 'Interpolated blend from nearest tested colors.',
     });
 
-    // Component model prediction for the interpolated recipe
-    // This may give a better result for multi-component recipes
-    const componentLab = this.predictLabFromComponents(interpolatedRecipe);
-    if (componentLab) {
-      const compHex = rgbToHex(...labToRgb(...componentLab));
-      const compDe = deltaE2000(targetLab, componentLab);
-      if (compHex !== predictedHex) {
-        candidates.push({
-          recipe: interpolatedRecipe,
-          predicted_lab: componentLab,
-          predicted_hex: compHex,
-          delta_e: round2(compDe),
-          confidence: round3(deToConfidence(compDe)),
-          explanation: 'Predicted from component contribution model.',
-        });
-      }
-    }
-
-    // Add individual nearest neighbors
-    for (let j = 0; j < Math.min(8, k); j++) {
-      const idx = distances[j].index;
-      const altLab: [number, number, number] = [
-        this.labPoints[idx][0],
-        this.labPoints[idx][1],
-        this.labPoints[idx][2],
-      ];
+    // Individual nearest neighbors as alternatives
+    for (let j = 0; j < Math.min(8, neighbors.length); j++) {
+      const n = neighbors[j];
+      const pt = this.labPoints[n.index];
+      const altLab: [number, number, number] = [pt[0], pt[1], pt[2]];
       const altHex = rgbToHex(...labToRgb(...altLab));
-      const altDe = distances[j].de;
 
       candidates.push({
-        recipe: this.recipes[idx],
+        recipe: this.recipes[n.index],
         predicted_lab: altLab,
         predicted_hex: altHex,
-        delta_e: round2(altDe),
-        confidence: round3(deToConfidence(altDe)),
-        explanation: `Tested color #${j + 1} (ΔE=${altDe.toFixed(1)})`,
+        delta_e: round2(n.de),
+        confidence: round3(this.confidences[n.index] * deToConfidence(n.de)),
+        explanation: `Tested color #${j + 1} (ΔE=${n.de.toFixed(1)})`,
       });
     }
 
-    // Sort all candidates by ΔE — best match wins, whether interpolated or tested
+    // Sort by ΔE, deduplicate by hex
     candidates.sort((a, b) => a.delta_e - b.delta_e);
-
-    // Deduplicate by hex (keep lowest ΔE version)
     const seen = new Set<string>();
     const unique: ColorMatch[] = [];
     for (const c of candidates) {
@@ -713,15 +515,13 @@ export class ColorEngine {
     const primary = unique[0];
     const alternatives = unique.slice(1, 4);
 
-    // Out-of-gamut: based on the best match we can actually produce
-    const bestDe = primary.delta_e;
-    const isOog = bestDe > DELTA_E_THRESHOLD;
-
     return {
       primary_match: primary,
       alternatives,
-      is_out_of_gamut: isOog,
-      gamut_explanation: '',
+      is_out_of_gamut: primary.delta_e > DELTA_E_THRESHOLD,
+      gamut_explanation: primary.delta_e > DELTA_E_THRESHOLD
+        ? `Best achievable ΔE is ${primary.delta_e.toFixed(1)} — this color may be outside our stain gamut.`
+        : '',
     };
   }
 
@@ -732,153 +532,63 @@ export class ColorEngine {
   }
 
   /**
-   * Detailed match for the recipe report — exposes all compositional reasoning.
-   * Returns the k-NN neighbors used, their weights, the interpolation math,
-   * and the component model's per-stain contributions.
-   *
-   * TEMPORARY: for calibration review. Will be removed at deployment.
+   * Detailed match for the recipe report — exposes neighbors, weights, confidences.
    */
   matchDetailedFromHex(hex: string): DetailedMatchResult {
     const [r, g, b] = hexToRgb(hex);
     const targetLab = rgbToLab(r, g, b);
 
-    const k = Math.min(12, this.labPoints.length);
-    const dim = this.stainCodes.length;
-
-    // k-NN with CIEDE2000
-    const distances = this.labPoints.map((pt, i) => ({
-      de: deltaE2000(targetLab, [pt[0], pt[1], pt[2]]),
-      index: i,
-    })).sort((a, b) => a.de - b.de).slice(0, k);
-
-    // IDW weights
-    const weights = distances.map(d => 1 / (d.de * d.de + 1e-8));
-    const wSum = weights.reduce((a, b) => a + b, 0);
-    const normalizedWeights = weights.map(w => w / wSum);
-
-    // Neighbors detail
-    const neighbors: DetailedNeighbor[] = distances.map((d, j) => ({
-      recipe: this.recipes[d.index],
-      lab: [this.labPoints[d.index][0], this.labPoints[d.index][1], this.labPoints[d.index][2]] as [number, number, number],
-      hex: rgbToHex(...labToRgb(this.labPoints[d.index][0], this.labPoints[d.index][1], this.labPoints[d.index][2])),
-      delta_e: round2(d.de),
-      weight: round3(normalizedWeights[j]),
-      cone: 6, // We only show cone 6 in the engine currently
-    }));
-
-    // Interpolated recipe vector
-    const primaryVec = new Array(dim).fill(0);
-    for (let j = 0; j < k; j++) {
-      const w = normalizedWeights[j];
-      const rv = this.recipeVectors[distances[j].index];
-      for (let i = 0; i < dim; i++) {
-        primaryVec[i] += w * rv[i];
-      }
-    }
-    for (let i = 0; i < dim; i++) {
-      primaryVec[i] = Math.max(0, Math.min(MAX_STAIN_PCT, primaryVec[i]));
-    }
-
+    const neighbors = this.findNeighbors(targetLab);
+    const primaryVec = this.interpolateRecipe(neighbors);
     const interpolatedRecipe = this.vectorToRecipe(primaryVec);
-    const knnLab = this.predictLabFromRecipe(primaryVec);
-    const knnHex = rgbToHex(...labToRgb(...knnLab));
+    // Predicted color = weighted average of neighbors' actual measured Lab values
+    const predictedLab = this.predictLabFromNeighbors(neighbors);
+    const predictedHex = rgbToHex(...labToRgb(...predictedLab));
+    const predictedDe = deltaE2000(targetLab, predictedLab);
 
-    // Component model breakdown
-    const stains = interpolatedRecipe.filter(s => s.pct > 0);
-    const stainContributions: StainContributionDetail[] = [];
-    let sumDL = 0, sumDa = 0, sumDb = 0;
-
-    for (const s of stains) {
-      const contrib = this.interpolateSingleCurve(s.code, s.pct);
-      if (contrib) {
-        stainContributions.push({
-          code: s.code,
-          name: stainDisplayName(s.code),
-          pct: round2(s.pct),
-          delta_L: round2(contrib.dL),
-          delta_a: round2(contrib.da),
-          delta_b: round2(contrib.db),
-        });
-        sumDL += contrib.dL;
-        sumDa += contrib.da;
-        sumDb += contrib.db;
-      }
-    }
-
-    // Additive prediction (before interaction corrections)
-    const additiveLab: [number, number, number] = [
-      Math.max(0, Math.min(100, this.baseLab[0] + sumDL)),
-      this.baseLab[1] + sumDa,
-      this.baseLab[2] + sumDb,
-    ];
-
-    // Full component prediction (with interaction corrections)
-    const componentLab = this.predictLabFromComponents(interpolatedRecipe);
-    const componentHex = componentLab ? rgbToHex(...labToRgb(...componentLab)) : null;
-
-    // Interaction corrections total
-    let interDL = 0, interDa = 0, interDb = 0;
-    if (componentLab) {
-      interDL = componentLab[0] - additiveLab[0];
-      interDa = componentLab[1] - additiveLab[1];
-      interDb = componentLab[2] - additiveLab[2];
-    }
-
-    // Hybrid blend info
-    const minDist = distances[0].de;
-    const knnWeight = Math.max(0.2, Math.min(1.0, 1.0 / (1.0 + minDist * 0.15)));
+    const detailedNeighbors: DetailedNeighbor[] = neighbors.map(n => ({
+      recipe: this.recipes[n.index],
+      lab: [...this.labPoints[n.index]] as [number, number, number],
+      hex: rgbToHex(...labToRgb(...this.labPoints[n.index])),
+      delta_e: round2(n.de),
+      weight: round3(n.weight),
+      confidence: round3(this.confidences[n.index]),
+      generatable: n.generatable,
+      cone: this._cone,
+    }));
 
     return {
       target_hex: hex,
       target_lab: targetLab,
       interpolated_recipe: interpolatedRecipe,
-      knn_prediction: { lab: knnLab, hex: knnHex },
-      component_prediction: componentLab ? { lab: componentLab, hex: componentHex! } : null,
-      additive_prediction: { lab: additiveLab, hex: rgbToHex(...labToRgb(...additiveLab)) },
-      base_lab: [...this.baseLab] as [number, number, number],
-      stain_contributions: stainContributions,
-      interaction_correction: { dL: round2(interDL), da: round2(interDa), db: round2(interDb) },
-      hybrid_weights: { knn: round3(knnWeight), component: round3(1 - knnWeight) },
-      nearest_neighbors: neighbors,
+      predicted_lab: predictedLab,
+      predicted_hex: predictedHex,
+      predicted_delta_e: round2(predictedDe),
+      nearest_neighbors: detailedNeighbors,
       stain_codes: [...this.stainCodes],
+      cone: this._cone,
+      atmosphere: this._atmosphere,
+      data_points: this._dataPointCount,
     };
   }
 
-  get isLoaded(): boolean {
-    return this.loaded;
-  }
-
-  get dataPointCount(): number {
-    return this.labPoints.length;
-  }
-
-  get discoveredStainCodes(): string[] {
-    return [...this.stainCodes];
-  }
+  get isLoaded(): boolean { return this.loaded; }
+  get dataPointCount(): number { return this._dataPointCount; }
+  get generatablePointCount(): number { return this._generatableCount; }
+  get referencePointCount(): number { return this._referenceCount; }
+  get cone(): number { return this._cone; }
+  get atmosphere(): string { return this._atmosphere; }
+  get discoveredStainCodes(): string[] { return [...this.stainCodes]; }
 }
+
+// ─── Utilities ───────────────────────────────────────
 
 function round2(n: number): number { return Math.round(n * 100) / 100; }
 function round3(n: number): number { return Math.round(n * 1000) / 1000; }
 
-/** Map ΔE to a 0–1 confidence score. ΔE < 1 → ~98%, ΔE 5 → ~75%, ΔE 20 → ~40%. */
+/** Map ΔE to a 0–1 confidence score. ΔE < 1 → ~96%, ΔE 5 → ~80%, ΔE 20 → ~50%. */
 function deToConfidence(de: number): number {
   return Math.max(0.1, Math.min(0.99, 1.0 / (1.0 + de * 0.04)));
-}
-
-// ─── Multi-component prediction utilities ───────────
-
-/**
- * Predict what color a given recipe will produce, using the component
- * contribution model. Public API for testing multi-component blends.
- */
-export function predictRecipeColor(
-  engine: ColorEngine,
-  recipe: Recipe,
-): { lab: [number, number, number]; hex: string } | null {
-  const lab = engine.predictLabFromComponents(recipe);
-  if (!lab) return null;
-  const hex = rgbToHex(...labToRgb(...lab));
-  return { lab, hex };
 }
 
 // ─── Singleton ───────────────────────────────────────

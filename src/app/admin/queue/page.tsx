@@ -28,6 +28,7 @@ export default function ManufacturingQueue() {
     { value: 'all', label: 'All' },
     { value: 'pending_qc', label: 'Pending QC' },
     { value: 'qc_passed', label: 'QC Passed' },
+    { value: 'sds_ready', label: 'SDS Ready' },
     { value: 'ready_to_batch', label: 'Ready to Batch' },
     { value: 'batched', label: 'Batched' },
     { value: 'labeled', label: 'Labeled' },
@@ -108,6 +109,14 @@ export default function ManufacturingQueue() {
           </Link>
         );
       case 'qc_passed':
+        return (
+          <Link
+            href={`/admin/queue/${order.id}/sds`}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            Generate SDS
+          </Link>
+        );
       case 'sds_ready':
       case 'ready_to_batch':
         return (

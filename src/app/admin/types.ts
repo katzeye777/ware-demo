@@ -23,6 +23,8 @@ export interface ManufacturingOrder {
   customer_name?: string;
   customer_email?: string;
   shipping_address?: string;
+  form?: 'dry' | 'liquid';
+  sds_url?: string;
   lot_number?: string;
   tracking_number?: string;
   carrier?: string;

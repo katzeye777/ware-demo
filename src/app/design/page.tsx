@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useDesignStore } from '@/lib/store';
-import { findGlaze, generatePreview, saveGlaze } from '@/lib/demo-api';
+import { findGlaze, generatePreview, saveGlaze, setFiringModel } from '@/lib/demo-api';
 import ColorPicker from './components/ColorPicker';
 import FinishSelector from './components/FinishSelector';
+import FiringSelector from './components/FiringSelector';
 import BatchSizeSelector from './components/BatchSizeSelector';
 import ResultsPanel from './components/ResultsPanel';
 import { Sparkles, Save, ArrowRight, Image as ImageIcon } from 'lucide-react';
@@ -26,7 +27,10 @@ export default function DesignPage() {
 
   const [color, setColor] = useState('#e4533d');
   const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>('glossy');
-  const [batchSize, setBatchSize] = useState(500);
+  const [cone, setCone] = useState('6');
+  const [atmosphere, setAtmosphere] = useState('ox');
+  const [batchSize, setBatchSize] = useState(350);
+  const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -40,10 +44,14 @@ export default function DesignPage() {
     setPreviewImage(null);
 
     try {
+      // Set the firing model before searching
+      setFiringModel(Number(cone), atmosphere);
+
       const design = {
         target_color_hex: color,
         finish,
         batch_size_grams: batchSize,
+        firing_temp_cone: cone,
       };
 
       setCurrentDesign(design);
@@ -184,9 +192,24 @@ export default function DesignPage() {
             <FinishSelector value={finish} onChange={setFinish} />
           </div>
 
+          {/* Firing Temperature */}
+          <div className="card">
+            <FiringSelector
+              cone={cone}
+              atmosphere={atmosphere}
+              onConeChange={setCone}
+              onAtmosphereChange={setAtmosphere}
+            />
+          </div>
+
           {/* Batch Size */}
           <div className="card">
-            <BatchSizeSelector value={batchSize} onChange={setBatchSize} />
+            <BatchSizeSelector
+              value={batchSize}
+              onChange={setBatchSize}
+              format={glazeFormat}
+              onFormatChange={setGlazeFormat}
+            />
           </div>
         </div>
       </div>
@@ -284,13 +307,6 @@ export default function DesignPage() {
               </button>
             </div>
 
-            {/* TEMP: Generate Report — remove at deployment */}
-            <button
-              onClick={() => router.push(`/design/report?color=${encodeURIComponent(color)}`)}
-              className="w-full mt-3 border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
-            >
-              <span>Generate Report</span>
-            </button>
           </div>
         </div>
       )}
