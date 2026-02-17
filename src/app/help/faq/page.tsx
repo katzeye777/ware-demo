@@ -32,7 +32,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         question: 'Should I order dry or wet?',
-        answer: 'We recommend dry powder for most potters. It costs less, ships cheaper (you\'re not paying to ship water), and stores indefinitely on your shelf. Just add water when you\'re ready to use it — we include mixing instructions and videos. Wet (pre-mixed) is available if you prefer, but it costs more, ships heavier, and has a longer lead time.',
+        answer: 'We recommend dry powder for most potters. It costs less, ships cheaper (you\'re not paying to ship water), and stores indefinitely on your shelf. Just add water when you\'re ready to use it — we include mixing instructions and videos. Wet (pre-mixed) is available if you prefer, but it costs more, ships heavier, and has a longer lead time. We can include a dust mask too, if you need one — just add it on in your final order.',
       },
       {
         question: 'Can I reorder the same glaze later?',
@@ -103,7 +103,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         question: 'How is the glaze packaged?',
-        answer: 'Dry powder is vacuum-sealed to eliminate possible bag pops during shipping and minimize package size, then packed inside a sturdy shipping box. Wet glaze is packed in sealed plastic containers with leak-proof lids, wrapped and cushioned for transit. Both include a printed label with your recipe name and application instructions.',
+        answer: 'Dry powder is vacuum-sealed to eliminate possible bag pops during shipping and minimize package size, then packed in an envelope or box depending on your batch size. Wet glaze is packed in sealed plastic containers with leak-proof lids, wrapped and cushioned for transit. Both include a printed label with your recipe name and application instructions. We try to minimize the materials we use in every part of our process — from packaging to water to labels — to keep things simple and reduce our waste stream and environmental impact.',
       },
     ],
   },
