@@ -12,6 +12,8 @@ import {
   AlertCircle,
   Palette,
   Loader2,
+  Save,
+  Check,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -50,6 +52,45 @@ export default function LibraryGlazeDetailPage() {
   const [batchSize, setBatchSize] = useState(350);
   const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
   const [addedToCart, setAddedToCart] = useState(false);
+
+  // Personal rating + review (localStorage-backed)
+  const [personalRating, setPersonalRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewSaved, setReviewSaved] = useState(false);
+
+  // Load personal review from localStorage on mount
+  useEffect(() => {
+    if (!glazeId) return;
+    try {
+      const stored = localStorage.getItem(`ware_review_${glazeId}`);
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.rating) setPersonalRating(data.rating);
+        if (data.text) setReviewText(data.text);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [glazeId]);
+
+  const handleSaveReview = () => {
+    try {
+      localStorage.setItem(
+        `ware_review_${glazeId}`,
+        JSON.stringify({ rating: personalRating, text: reviewText })
+      );
+      setReviewSaved(true);
+      setTimeout(() => setReviewSaved(false), 2000);
+    } catch {
+      // localStorage full or unavailable
+    }
+  };
+
+  const handleStarClick = (star: number) => {
+    // Click same star to clear
+    setPersonalRating(star === personalRating ? 0 : star);
+  };
 
   // Gallery state
   const [galleryImages, setGalleryImages] = useState<(string | null)[]>([
@@ -276,37 +317,68 @@ export default function LibraryGlazeDetailPage() {
               {glaze.name}
             </h1>
 
-            {glaze.rating_avg !== undefined && glaze.rating_avg > 0 && (
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center space-x-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-5 h-5 ${
-                        star <= Math.round(glaze.rating_avg || 0)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-clay-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-medium">
-                  {glaze.rating_avg.toFixed(1)}
-                </span>
-                {glaze.rating_count !== undefined && (
-                  <span className="text-clay-500">
-                    ({glaze.rating_count} reviews)
-                  </span>
-                )}
-              </div>
-            )}
-
             <div className="inline-block bg-clay-100 px-4 py-2 rounded-full">
               <span className="text-sm font-medium text-clay-700">
                 {glaze.finish.charAt(0).toUpperCase() + glaze.finish.slice(1)}{' '}
                 Finish
               </span>
             </div>
+          </div>
+
+          {/* Your Rating */}
+          <div className="card mb-6">
+            <h3 className="font-semibold text-clay-900 mb-3">Your Rating</h3>
+            <div className="flex items-center space-x-1 mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => handleStarClick(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="p-0.5 transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`w-7 h-7 cursor-pointer transition-colors ${
+                      star <= (hoverRating || personalRating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-clay-300 hover:text-yellow-300'
+                    }`}
+                  />
+                </button>
+              ))}
+              {personalRating > 0 && (
+                <span className="text-sm text-clay-500 ml-2">
+                  {personalRating}/5
+                </span>
+              )}
+            </div>
+            <textarea
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              placeholder="Add your notes about this glaze..."
+              rows={3}
+              className="w-full px-3 py-2 border border-clay-200 rounded-lg text-sm text-clay-900 placeholder:text-clay-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none mb-3"
+            />
+            <button
+              onClick={handleSaveReview}
+              disabled={personalRating === 0 && !reviewText.trim()}
+              className={`btn-secondary flex items-center justify-center space-x-2 w-full disabled:opacity-40 disabled:cursor-not-allowed transition-all ${
+                reviewSaved ? 'bg-green-50 border-green-500 text-green-700' : ''
+              }`}
+            >
+              {reviewSaved ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Saved!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save Notes</span>
+                </>
+              )}
+            </button>
           </div>
 
           {/* Specifications */}
