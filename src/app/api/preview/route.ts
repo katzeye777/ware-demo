@@ -5,7 +5,7 @@
  * Keeps OPENAI_API_KEY server-side (never sent to browser).
  *
  * POST /api/preview
- * Body: { color_hex: "#ff5533", finish: "glossy" }
+ * Body: { color_hex: "#ff5533", finish: "glossy", vessel_type?: "bowl" }
  * Returns: { image_url: "...", prompt_used: "..." }
  *
  * Plugin interface: When Stable Diffusion pipeline is ready,
@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // ── Prompt Template ──
 
-const PROMPT_TEMPLATE = `A professional studio photograph of a handmade ceramic bowl with a smooth, {finish} glaze finish in the color {color_description} (hex: {color_hex}). The glaze has a rich, even coating with subtle depth. Shot on a clean white background with soft studio lighting. The ceramic piece shows handmade character with slight organic asymmetry. No text, no labels. Photorealistic, high quality.`;
+const PROMPT_TEMPLATE = `A professional studio photograph of a handmade ceramic {vessel_type} with a smooth, {finish} glaze finish in the color {color_description} (hex: {color_hex}). The glaze has a rich, even coating with subtle depth. Shot on a clean white background with soft studio lighting. The ceramic piece shows handmade character with slight organic asymmetry. No text, no labels. Photorealistic, high quality.`;
 
 function colorDescription(hex: string): string {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -43,8 +43,9 @@ function colorDescription(hex: string): string {
   return 'custom color';
 }
 
-function buildPrompt(colorHex: string, finish: string): string {
+function buildPrompt(colorHex: string, finish: string, vesselType: string = 'bowl'): string {
   return PROMPT_TEMPLATE
+    .replace('{vessel_type}', vesselType)
     .replace('{finish}', finish)
     .replace('{color_description}', colorDescription(colorHex))
     .replace('{color_hex}', colorHex);
@@ -60,16 +61,18 @@ interface GenerateImageResult {
 
 async function generateImageDallE(
   colorHex: string,
-  finish: string
+  finish: string,
+  vesselType: string = 'bowl'
 ): Promise<GenerateImageResult> {
   const apiKey = process.env.OPENAI_API_KEY;
-  const prompt = buildPrompt(colorHex, finish);
+  const prompt = buildPrompt(colorHex, finish, vesselType);
 
   if (!apiKey) {
     // Return colored placeholder when no API key is configured
     const hex = colorHex.replace('#', '');
+    const label = vesselType.charAt(0).toUpperCase() + vesselType.slice(1);
     return {
-      image_url: `https://placehold.co/512x512/${hex}/white?text=Preview`,
+      image_url: `https://placehold.co/512x512/${hex}/white?text=${label}`,
       prompt_used: prompt,
       model: 'placeholder',
     };
@@ -104,14 +107,14 @@ async function generateImageDallE(
 }
 
 // ── Swap this function when Stable Diffusion is ready ──
-const generateImage = generateImageDallE;
+const generateImage: typeof generateImageDallE = generateImageDallE;
 
 // ── Route Handler ──
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { color_hex, finish = 'glossy' } = body;
+    const { color_hex, finish = 'glossy', vessel_type = 'bowl' } = body;
 
     if (!color_hex || !/^#[0-9a-fA-F]{6}$/.test(color_hex)) {
       return NextResponse.json(
@@ -120,7 +123,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await generateImage(color_hex, finish);
+    const result = await generateImage(color_hex, finish, vessel_type);
 
     return NextResponse.json({
       image_url: result.image_url,

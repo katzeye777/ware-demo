@@ -173,7 +173,7 @@ export default function LibraryPage() {
                 name={glaze.name}
                 colorHex={glaze.target_color_hex}
                 previewImageUrl={glaze.preview_image_url}
-                href={`/vision-board/${glaze.selected_match_id}`}
+                href={`/library/${glaze.selected_match_id}`}
                 showRating={false}
               />
             </div>

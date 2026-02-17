@@ -1,15 +1,23 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useCartStore } from '@/lib/store';
 import { VISION_BOARD_GLAZES } from '@/app/vision-board/data';
-import { Star, ShoppingCart, Share2, Heart, AlertCircle } from 'lucide-react';
+import {
+  Star,
+  ShoppingCart,
+  Share2,
+  Heart,
+  AlertCircle,
+  Palette,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
 
 const PRICE_PER_PINT = 15.0;
 const PINT_GRAMS = 350;
-const WET_SURCHARGE = 1.30;
+const WET_SURCHARGE = 1.3;
 
 const BATCH_SIZES = [
   { value: 350, label: 'Pint (350g)' },
@@ -19,13 +27,15 @@ const BATCH_SIZES = [
   { value: 5000, label: '5 kg' },
 ];
 
+const GALLERY_VESSELS = ['mug', 'bowl', 'vase'] as const;
+
 function calculatePrice(grams: number, isWet: boolean = false): string {
   const base = (grams / PINT_GRAMS) * PRICE_PER_PINT;
   const total = isWet ? base * WET_SURCHARGE : base;
   return total.toFixed(2);
 }
 
-export default function VisionBoardGlazeDetailPage() {
+export default function LibraryGlazeDetailPage() {
   const params = useParams();
   const addItem = useCartStore((s) => s.addItem);
 
@@ -40,6 +50,41 @@ export default function VisionBoardGlazeDetailPage() {
   const [batchSize, setBatchSize] = useState(350);
   const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
   const [addedToCart, setAddedToCart] = useState(false);
+
+  // Gallery state
+  const [galleryImages, setGalleryImages] = useState<(string | null)[]>([
+    null,
+    null,
+    null,
+  ]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+
+  // Generate gallery images on mount
+  useEffect(() => {
+    if (!glaze) return;
+
+    setGalleryLoading(true);
+
+    Promise.all(
+      GALLERY_VESSELS.map((vessel) =>
+        fetch('/api/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            color_hex: glaze.color_hex,
+            finish: glaze.finish,
+            vessel_type: vessel,
+          }),
+        })
+          .then((r) => r.json())
+          .then((data) => data.image_url as string)
+          .catch(() => null)
+      )
+    ).then((images) => {
+      setGalleryImages(images);
+      setGalleryLoading(false);
+    });
+  }, [glaze]);
 
   const handleFavorite = () => {
     setIsFavorited(!isFavorited);
@@ -80,10 +125,14 @@ export default function VisionBoardGlazeDetailPage() {
       <div className="container mx-auto px-4 py-12 max-w-2xl">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-clay-900 mb-2">Glaze Not Found</h2>
-          <p className="text-clay-600 mb-6">This glaze does not exist or may have been removed.</p>
-          <Link href="/vision-board" className="btn-primary">
-            Back to Vision Board
+          <h2 className="text-2xl font-bold text-clay-900 mb-2">
+            Glaze Not Found
+          </h2>
+          <p className="text-clay-600 mb-6">
+            This glaze does not exist or may have been removed.
+          </p>
+          <Link href="/library" className="btn-primary">
+            Back to My Glazes
           </Link>
         </div>
       </div>
@@ -94,14 +143,14 @@ export default function VisionBoardGlazeDetailPage() {
     <div className="container mx-auto px-4 py-12 max-w-6xl">
       {/* Breadcrumb */}
       <Link
-        href="/vision-board"
+        href="/library"
         className="text-brand-600 hover:text-brand-700 text-sm font-medium mb-6 inline-block"
       >
-        &larr; Back to Vision Board
+        &larr; Back to My Glazes
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Left Column - Image + Color */}
+        {/* ── Left Column ── */}
         <div>
           <div className="sticky top-24 space-y-4">
             {/* Main Image */}
@@ -120,32 +169,76 @@ export default function VisionBoardGlazeDetailPage() {
               )}
             </div>
 
-            {/* Color Reference */}
+            {/* Color Comparison — large swatch */}
             <div className="card">
-              <h4 className="text-sm font-medium text-clay-700 mb-3">Color Reference</h4>
+              <h4 className="text-sm font-medium text-clay-700 mb-3">
+                Color Reference
+              </h4>
               <div className="flex items-stretch gap-3">
+                {/* Software prediction — BIG */}
                 <div className="flex-1">
                   <div
-                    className="w-full h-20 rounded-lg color-swatch border border-clay-200"
+                    className="w-full h-32 rounded-lg color-swatch border border-clay-200"
                     style={{ backgroundColor: glaze.color_hex }}
                   />
-                  <p className="text-xs text-clay-500 mt-2 text-center">Software prediction</p>
-                  <p className="text-xs font-mono font-bold text-clay-900 text-center">
+                  <p className="text-xs text-clay-500 mt-2 text-center">
+                    Software prediction
+                  </p>
+                  <p className="text-sm font-mono font-bold text-clay-900 text-center">
                     {glaze.color_hex.toUpperCase()}
                   </p>
                 </div>
+                {/* Fired test tile thumbnail */}
                 {glaze.preview_image_url && (
                   <div className="flex-1">
-                    <div className="w-full h-20 rounded-lg overflow-hidden border border-clay-200">
+                    <div className="w-full h-32 rounded-lg overflow-hidden border border-clay-200">
                       <img
                         src={glaze.preview_image_url}
                         alt="Fired sample"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <p className="text-xs text-clay-500 mt-2 text-center">Fired test tile</p>
+                    <p className="text-xs text-clay-500 mt-2 text-center">
+                      Fired test tile
+                    </p>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Generated Gallery */}
+            <div className="card">
+              <h4 className="text-sm font-medium text-clay-700 mb-3">
+                Gallery Preview
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
+                {GALLERY_VESSELS.map((vessel, i) => (
+                  <div key={vessel} className="space-y-1">
+                    <div className="aspect-square rounded-lg overflow-hidden border border-clay-200 bg-clay-50">
+                      {galleryLoading ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 text-clay-300 animate-spin" />
+                        </div>
+                      ) : galleryImages[i] ? (
+                        <img
+                          src={galleryImages[i]!}
+                          alt={`${glaze.name} on a ${vessel}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full"
+                          style={{
+                            background: `linear-gradient(135deg, ${glaze.color_hex}30, ${glaze.color_hex}60)`,
+                          }}
+                        />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-clay-400 text-center capitalize">
+                      {vessel}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -154,10 +247,14 @@ export default function VisionBoardGlazeDetailPage() {
               <button
                 onClick={handleFavorite}
                 className={`btn-outline flex-1 flex items-center justify-center space-x-2 ${
-                  isFavorited ? 'bg-red-50 border-red-500 text-red-600' : ''
+                  isFavorited
+                    ? 'bg-red-50 border-red-500 text-red-600'
+                    : ''
                 }`}
               >
-                <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+                <Heart
+                  className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`}
+                />
                 <span>{isFavorited ? 'Saved' : 'Save'}</span>
               </button>
               <button
@@ -171,11 +268,13 @@ export default function VisionBoardGlazeDetailPage() {
           </div>
         </div>
 
-        {/* Right Column - Details + Ordering */}
+        {/* ── Right Column ── */}
         <div>
           {/* Name + Rating + Finish */}
           <div className="mb-6">
-            <h1 className="text-4xl font-bold text-clay-900 mb-3">{glaze.name}</h1>
+            <h1 className="text-4xl font-bold text-clay-900 mb-3">
+              {glaze.name}
+            </h1>
 
             {glaze.rating_avg !== undefined && glaze.rating_avg > 0 && (
               <div className="flex items-center space-x-2 mb-4">
@@ -191,16 +290,21 @@ export default function VisionBoardGlazeDetailPage() {
                     />
                   ))}
                 </div>
-                <span className="text-lg font-medium">{glaze.rating_avg.toFixed(1)}</span>
+                <span className="text-lg font-medium">
+                  {glaze.rating_avg.toFixed(1)}
+                </span>
                 {glaze.rating_count !== undefined && (
-                  <span className="text-clay-500">({glaze.rating_count} reviews)</span>
+                  <span className="text-clay-500">
+                    ({glaze.rating_count} reviews)
+                  </span>
                 )}
               </div>
             )}
 
             <div className="inline-block bg-clay-100 px-4 py-2 rounded-full">
               <span className="text-sm font-medium text-clay-700">
-                {glaze.finish.charAt(0).toUpperCase() + glaze.finish.slice(1)} Finish
+                {glaze.finish.charAt(0).toUpperCase() + glaze.finish.slice(1)}{' '}
+                Finish
               </span>
             </div>
           </div>
@@ -230,6 +334,20 @@ export default function VisionBoardGlazeDetailPage() {
                 <span className="font-medium text-clay-900">Oxidation</span>
               </div>
             </div>
+          </div>
+
+          {/* Tweak This Glaze */}
+          <div className="mb-6">
+            <Link
+              href={`/design?color=${encodeURIComponent(glaze.color_hex)}`}
+              className="w-full btn-primary flex items-center justify-center space-x-2 py-3"
+            >
+              <Palette className="w-5 h-5" />
+              <span>Tweak This Glaze</span>
+            </Link>
+            <p className="text-xs text-clay-500 mt-2 text-center">
+              Adjust the color, fix glossiness, or work on alleviating crazing
+            </p>
           </div>
 
           {/* Batch Size Selector */}
@@ -289,9 +407,7 @@ export default function VisionBoardGlazeDetailPage() {
             <button
               onClick={handleAddToCart}
               className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-semibold text-lg transition-all ${
-                addedToCart
-                  ? 'bg-green-600 text-white'
-                  : 'btn-primary'
+                addedToCart ? 'bg-green-600 text-white' : 'btn-primary'
               }`}
             >
               <ShoppingCart className="w-5 h-5" />
@@ -301,12 +417,20 @@ export default function VisionBoardGlazeDetailPage() {
 
           {/* Application Tips */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="font-semibold text-blue-900 mb-2">Application Tips</h4>
+            <h4 className="font-semibold text-blue-900 mb-2">
+              Application Tips
+            </h4>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>&bull; Apply 2-3 coats for best color saturation</li>
-              <li>&bull; Allow each coat to dry completely before applying the next</li>
-              <li>&bull; Results may vary based on clay body and kiln atmosphere</li>
-              <li>&bull; Test fire a sample piece before glazing final work</li>
+              <li>
+                &bull; Allow each coat to dry completely before applying the next
+              </li>
+              <li>
+                &bull; Results may vary based on clay body and kiln atmosphere
+              </li>
+              <li>
+                &bull; Test fire a sample piece before glazing final work
+              </li>
             </ul>
           </div>
 
