@@ -28,7 +28,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         question: 'How much does it cost?',
-        answer: 'Dry powder is $15 per pint (350g). Larger batches are priced proportionally — for example, 1 kg is about $42.86. Pre-mixed (wet) glazes carry a 30% surcharge to cover mixing, packaging, and the heavier shipping weight.',
+        answer: 'It depends on whether you order dry or wet. Dry powder is the default and more affordable option — it ships lighter, stores indefinitely, and you just add water when you\'re ready. Wet (pre-mixed) glazes cost more because of the additional mixing, heavier packaging, and shipping weight. You\'ll see exact pricing for your batch size during checkout.',
       },
       {
         question: 'Should I order dry or wet?',
@@ -38,6 +38,10 @@ const FAQ_DATA: FAQCategory[] = [
         question: 'Can I reorder the same glaze later?',
         answer: 'Yes. Every glaze you order is saved to your account. You can reorder the exact same recipe in any batch size at any time.',
       },
+      {
+        question: 'Can I keep my recipe private?',
+        answer: 'By default, your glaze recipe gets added to the Vision Board so other makers can discover and order it too. If you\'d prefer to keep your recipe just for you, we offer private recipes for a small additional fee. Private glazes won\'t appear on the Vision Board or be available to anyone else.',
+      },
     ],
   },
   {
@@ -45,7 +49,7 @@ const FAQ_DATA: FAQCategory[] = [
     items: [
       {
         question: 'What cone range do your glazes fire to?',
-        answer: 'Our standard glazes are formulated for cone 6 oxidation, which is the most common firing range for studio potters. If you need cone 10, cone 04, or a different range, select it during the design process and we\'ll adjust the recipe accordingly.',
+        answer: 'We currently offer glazes from cone 4 through cone 10. Our plan is to expand into every firing temperature eventually, but for now that\'s the range. Select your cone during the design process.',
       },
       {
         question: 'Are your glazes food safe?',
@@ -53,11 +57,11 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         question: 'What materials are in the glaze?',
-        answer: 'Our base glaze uses nepheline syenite, whiting, kaolin, silica, Ferro Frit 3195, and bentonite, plus CMC gum as a binder and a small amount of preservative (Kathon CG). Color comes from commercially available ceramic stains blended to match your chosen color.',
+        answer: 'The same materials you\'d use if you mixed your own glazes in your studio — feldspars, frits, clays, silica, and fluxes. Every recipe is formulated specifically for the color and finish you chose, so the exact blend varies. We include a full materials list with every order.',
       },
       {
         question: 'How do I apply the glaze?',
-        answer: 'Our glazes work with dipping, pouring, spraying, and brushing. We recommend dipping or pouring for the most even coat. Apply to bisqueware at a specific gravity of about 1.45–1.50 for dipping. Each order includes application instructions tailored to your batch size.',
+        answer: 'Our glazes work with any application method — dipping, pouring, spraying, or brushing. We want to hear from you how you plan to use them, because there are materials we can add to make them more brushable or better suited to other methods. Let us know during ordering and we\'ll tailor the recipe to your workflow.',
       },
       {
         question: 'Can I mix your glaze with other glazes?',
@@ -70,11 +74,11 @@ const FAQ_DATA: FAQCategory[] = [
     items: [
       {
         question: 'How accurate is the color match?',
-        answer: 'Our color matching is based on thousands of real fired test tiles measured with a spectrophotometer. The color you see in the preview is derived from actual fired results, not a digital guess. That said, every kiln is different — your results may vary slightly depending on your firing schedule, atmosphere, and clay body.',
+        answer: 'Our color matching is built on over three decades of glaze research and hundreds of thousands of glaze tests. It\'s our goal to create glazes that match your vision as closely as possible. But as you know in ceramics, there can always be variation — every kiln is different, and your results may shift depending on your firing schedule, atmosphere, and clay body.',
       },
       {
         question: 'What if the color I want isn\'t achievable in a glaze?',
-        answer: 'Some colors (very bright neons, certain fluorescents) fall outside the range of what ceramic stains can produce at high temperatures. If your chosen color is out of gamut, we\'ll show you the closest achievable match and let you adjust from there.',
+        answer: 'As you know, glazes aren\'t paint — because of the chemistry of the kiln, some colors just aren\'t achievable, and we want to be real with you about what\'s possible. If your chosen color is outside what we can reliably produce, we\'ll show you the closest match and let you adjust from there. But we\'re always testing, and we hope to create some of those impossible colors for you down the road.',
       },
       {
         question: 'Can I send a photo of a color I want to match?',
@@ -99,7 +103,7 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         question: 'How is the glaze packaged?',
-        answer: 'Dry powder is sealed in heavy-duty, resealable bags inside a sturdy shipping box. Wet glaze is packed in sealed plastic containers with leak-proof lids, wrapped and cushioned for transit. Both include a printed label with your recipe name and application instructions.',
+        answer: 'Dry powder is vacuum-sealed to eliminate possible bag pops during shipping and minimize package size, then packed inside a sturdy shipping box. Wet glaze is packed in sealed plastic containers with leak-proof lids, wrapped and cushioned for transit. Both include a printed label with your recipe name and application instructions.',
       },
     ],
   },
@@ -108,7 +112,7 @@ const FAQ_DATA: FAQCategory[] = [
     items: [
       {
         question: 'What if my glaze color doesn\'t match what I expected?',
-        answer: 'Glaze color depends on many variables — kiln temperature, atmosphere, clay body, and application thickness. If your fired result looks significantly different from the preview, open a support ticket with photos and your firing details. We\'ll work with you to troubleshoot or reformulate.',
+        answer: 'Glaze color depends on many variables — kiln temperature, atmosphere, clay body, and application thickness. If you want to tweak your glaze for the next time you order — alter the shade, or fix common glaze-to-clay-body issues like crazing — go to your dashboard, click on "Reorder This Glaze," and select the "Make Some Changes" button. You can adjust the recipe to work better for you. If your fired result looks significantly off from the preview, open a support ticket with photos and your firing details and we\'ll help sort it out.',
       },
       {
         question: 'Can I return a glaze?',
@@ -116,7 +120,16 @@ const FAQ_DATA: FAQCategory[] = [
       },
       {
         question: 'What if my shipment arrives damaged?',
-        answer: 'Take photos of the damaged package and product, then open a support ticket or email us at info@ceramicmaterialsworkshop.com. We\'ll send a replacement at no charge.',
+        answer: 'Take photos of the damaged package and product, then open a support ticket. We\'ll send a replacement at no charge.',
+      },
+    ],
+  },
+  {
+    name: 'Sharing',
+    items: [
+      {
+        question: 'How can I share how my glaze turned out?',
+        answer: 'Please share your real-world results with us! In your Library, you\'ll find the option to take a photo and share it, along with adding notes about how the glaze is working for you. Everything you share helps us make things better for your next batch — and for every maker who orders after you. So please share.',
       },
     ],
   },
