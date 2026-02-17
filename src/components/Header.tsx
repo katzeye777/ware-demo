@@ -15,6 +15,7 @@ export default function Header() {
     { href: '/design', label: 'Design' },
     { href: '/vision-board', label: 'Vision Board' },
     { href: '/waitlist', label: 'Join Waitlist' },
+    { href: '/help', label: 'Help' },
   ];
 
   const isActive = (href: string) => pathname === href;

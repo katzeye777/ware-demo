@@ -246,7 +246,7 @@ export default function SupportPage() {
           <p className="text-sm text-clay-600 mb-4">
             Find answers to common questions
           </p>
-          <a href="#" className="text-brand-600 hover:text-brand-700 text-sm font-medium">
+          <a href="/help/faq" className="text-brand-600 hover:text-brand-700 text-sm font-medium">
             Browse FAQ →
           </a>
         </div>
@@ -257,10 +257,10 @@ export default function SupportPage() {
             Reach us directly via email
           </p>
           <a
-            href="mailto:support@ware.com"
+            href="mailto:info@ceramicmaterialsworkshop.com"
             className="text-brand-600 hover:text-brand-700 text-sm font-medium"
           >
-            support@ware.com →
+            info@ceramicmaterialsworkshop.com →
           </a>
         </div>
 
