@@ -284,8 +284,9 @@ function generateGlazeName(hex: string, index: number): string {
 
 // ── Pricing logic ──
 
-function estimatePrice(batchSizeGrams: number, isPrivate: boolean): number {
-  const base = (batchSizeGrams / 350) * 15;
+function estimatePrice(batchSizeGrams: number, isPrivate: boolean, format: 'dry' | 'wet' = 'dry'): number {
+  let base = (batchSizeGrams / 350) * 15;
+  if (format === 'wet') base *= 1.30; // 30% surcharge for pre-mixed
   const privateSurcharge = isPrivate ? 4.99 : 0;
   return Math.round((base + privateSurcharge) * 100) / 100;
 }
@@ -325,7 +326,7 @@ export async function findGlaze(
     alternatives,
     out_of_gamut: result.is_out_of_gamut,
     out_of_gamut_reason: result.gamut_explanation || undefined,
-    estimated_price: estimatePrice(data.batch_size_grams, false),
+    estimated_price: estimatePrice(data.batch_size_grams, false, data.format || 'dry'),
   };
 }
 

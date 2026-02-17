@@ -38,6 +38,7 @@ export interface GlazeDesignRequest {
   application_method?: 'dip' | 'brush' | 'spray';
   batch_size_grams: number;
   firing_temp_cone?: string;
+  format?: 'dry' | 'wet';
 }
 
 export interface GlazeDesignResponse {

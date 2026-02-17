@@ -54,6 +54,7 @@ export default function DesignPage() {
         finish,
         batch_size_grams: batchSize,
         firing_temp_cone: cone,
+        format: glazeFormat,
       };
 
       setCurrentDesign(design);

@@ -11,6 +11,7 @@ interface BatchSizeSelectorProps {
 
 const PRICE_PER_PINT = 15.0;
 const PINT_GRAMS = 350;
+const WET_SURCHARGE = 1.30; // 30% markup for pre-mixed
 
 // All available batch sizes
 const BATCH_SIZES: { value: number; label: string }[] = [
@@ -47,8 +48,10 @@ const BATCH_SIZES: { value: number; label: string }[] = [
   { value: 15000, label: '5 Gallon Bucket (15,000g)' },
 ];
 
-function calculatePrice(grams: number): string {
-  return ((grams / PINT_GRAMS) * PRICE_PER_PINT).toFixed(2);
+function calculatePrice(grams: number, isWet: boolean = false): string {
+  const base = (grams / PINT_GRAMS) * PRICE_PER_PINT;
+  const total = isWet ? base * WET_SURCHARGE : base;
+  return total.toFixed(2);
 }
 
 export default function BatchSizeSelector({ value, onChange, format, onFormatChange }: BatchSizeSelectorProps) {
@@ -64,8 +67,7 @@ export default function BatchSizeSelector({ value, onChange, format, onFormatCha
         </label>
         <div className="text-right">
           <div className="text-2xl font-bold text-brand-600">
-            ${calculatePrice(value)}
-            {format === 'wet' && <span className="text-sm text-amber-600"> + wet fee</span>}
+            ${calculatePrice(value, format === 'wet')}
           </div>
           <div className="text-xs text-clay-500">
             estimated price
@@ -86,7 +88,7 @@ export default function BatchSizeSelector({ value, onChange, format, onFormatCha
       >
         {BATCH_SIZES.map((size) => (
           <option key={size.value} value={size.value}>
-            {size.label} — ${calculatePrice(size.value)}
+            {size.label} — ${calculatePrice(size.value, format === 'wet')}
           </option>
         ))}
       </select>
