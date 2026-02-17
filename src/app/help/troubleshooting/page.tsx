@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, ChevronDown, BookOpen, Search } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
-   Flaw Data — 12 common glaze flaws
+   Flaw Data — 9 glaze flaws
    ───────────────────────────────────────────── */
 
 interface GlazeFlaw {
@@ -24,334 +24,205 @@ const GLAZE_FLAWS: GlazeFlaw[] = [
     id: 'crawling',
     name: 'Crawling',
     emoji: '🕳️',
-    shortDesc: 'Glaze pulls away from the surface into thick beads, leaving bare clay exposed.',
+    shortDesc: 'Glaze pulls away from the surface.',
     looksLike:
-      'The glaze has pulled back from the clay surface, forming thick ridges or beaded islands with bare, unglazed areas between them. It often looks like the glaze tried to ball up on itself. Crawling can be localized (a few bare patches) or severe (most of the surface is exposed).',
+      'The glaze has pulled back from the clay, beading up and leaving bare spots. This happens before the glaze melts. It is an adhesion or drying shrinkage problem. Fix how you handle your ware and how the raw glaze behaves first — this is not a firing issue.',
     causes: [
-      'Dusty or oily bisqueware — any contamination prevents the glaze from gripping the surface.',
-      'Glaze applied too thick — excessively thick coats shrink more as they dry and can crack and pull away during firing.',
-      'High-shrinkage raw materials in the glaze, especially large amounts of ball clay or bentonite, which shrink significantly as moisture leaves.',
-      'Under-fired bisque — if the bisque is too porous or soft, the glaze may dry too quickly and crack before it can melt and bond.',
-      'Touching or rubbing the glazed surface before firing, disrupting the dried glaze layer.',
-      'Re-wetting an already dried glaze coat — the second layer of water causes the dry glaze to crack and lift.',
+      'Dusty, oily, or contaminated bisqueware — the glaze cannot grip the surface.',
+      'Glaze applied too thick — excessive coats shrink as they dry, crack, and pull away.',
+      'High-shrinkage raw materials in the glaze (too much ball clay or bentonite).',
+      'Touching or disturbing the dried glaze coat before firing.',
+      'Re-wetting an already dried glaze layer.',
     ],
     fixes: [
-      'Clean your bisqueware thoroughly before glazing — a quick rinse under water and full drying removes dust and loose particles.',
-      'Apply glaze more thinly. For dipping, aim for a 2–3 second dip. If spraying, build up thin even coats rather than one heavy pass.',
-      'Reduce the amount of ball clay or bentonite in the recipe. If you need a suspending agent, try adding a small amount of CMC gum or Veegum instead.',
-      'If your bisque is very porous (low-fired), lightly sponge-dampen the surface before glazing so the glaze doesn\'t dry too fast.',
-      'Avoid touching glazed surfaces. Use tongs or handle only unglazed areas.',
+      'Clean your bisqueware before glazing — rinse under water and let it dry completely.',
+      'Apply glaze thinner. For dipping, a 2–3 second dip is usually enough.',
+      'Reduce ball clay or bentonite. If you need suspension, use CMC gum instead.',
+      'Don\'t touch glazed surfaces before firing.',
     ],
     prevention: [
-      'Always handle bisqueware with clean hands or gloves.',
-      'Store bisque in a clean, covered area to keep dust off.',
-      'Test your application thickness on a scrap piece before glazing your best work.',
-      'Avoid double-dipping or re-wetting unless the first coat is still wet.',
+      'Handle bisqueware with clean hands or gloves.',
+      'Store bisque in a clean, covered area.',
+      'Test your application thickness on a scrap piece first.',
     ],
   },
   {
     id: 'crazing',
     name: 'Crazing',
     emoji: '🕸️',
-    shortDesc: 'Fine network of cracks in the glaze surface, like a cracked eggshell.',
+    shortDesc: 'Fine crack network in the glaze.',
     looksLike:
-      'A web of fine hairline cracks covering the glaze surface. The cracks may be visible immediately after the kiln cools or may develop over hours, days, or even weeks. Sometimes you can hear the crazing happening — tiny pinging or ticking sounds from the kiln as it cools. The cracks are only in the glaze, not through the clay body.',
+      'A web of fine hairline cracks across the glaze surface. May appear immediately out of the kiln or develop over days or weeks. You might hear it — tiny pinging sounds as the kiln cools. This is glaze fit. The glaze is in tension. It is chemistry relative to the body.',
     causes: [
-      'The glaze has a higher thermal expansion than the clay body. As the piece cools, the glaze wants to shrink more than the clay underneath, so it cracks under tension.',
-      'Too much sodium or potassium (high-expansion fluxes) in the glaze recipe.',
-      'Too little silica (SiO₂) or alumina (Al₂O₃) in the glaze — these form the glass network and reduce expansion.',
-      'Cooling the kiln too quickly, especially through the quartz inversion range (around 573°C / 1063°F).',
-      'Opening the kiln too early while it\'s still hot.',
-      'Thin clay walls — thinner pieces are more susceptible because the clay body can\'t resist the glaze tension as well.',
+      'The glaze has a higher thermal expansion than the clay body — as the piece cools, the glaze wants to shrink more than the clay, so it cracks.',
+      'Too much sodium or potassium (high-expansion fluxes) in the glaze.',
+      'Too little silica or alumina to form a stable glass network.',
     ],
     fixes: [
-      'Add more silica (SiO₂) to the glaze. Silica lowers thermal expansion and strengthens the glass network. Start by adding 5% and testing.',
-      'Reduce high-expansion fluxes: sodium (Na₂O) and potassium (K₂O). Replace some of the soda feldspar with a lithium- or calcium-based flux.',
-      'Add more alumina (Al₂O₃) through kaolin or alumina hydrate. This stiffens the glaze and reduces expansion.',
-      'Slow down the cooling in your kiln, especially between 600°C and 500°C (1112°F–932°F). A controlled cool through this range helps both glaze and clay body adjust together.',
-      'Don\'t open the kiln until it\'s below 100°C (212°F).',
+      'Add silica to the glaze — this lowers thermal expansion. Start with 5% and test.',
+      'Reduce high-expansion fluxes (sodium, potassium). Shift toward calcium or lithium sources.',
+      'Add alumina through kaolin — this stiffens the glaze and lowers expansion.',
     ],
     prevention: [
-      'Test new glazes on small tiles before using them on finished work.',
-      'Use a clay body and glaze pair that are designed to fit each other. Ask your clay and glaze suppliers for compatibility data.',
-      'Always slow-cool through quartz inversion — many kiln controllers have a "slow cool" setting for this.',
-      'If a glaze consistently crazes, it may never fit your clay body. Consider switching the glaze recipe rather than trying to patch it.',
+      'Test new glazes on tiles before using them on finished work.',
+      'Use a clay body and glaze that are designed to fit each other.',
+      'If a glaze consistently crazes on your clay, it may never fit. Switch the recipe.',
     ],
   },
   {
     id: 'shivering',
     name: 'Shivering',
     emoji: '💥',
-    shortDesc: 'Glaze chips or flakes off the surface, sometimes in sharp curls.',
+    shortDesc: 'Glaze flakes or chips off the surface.',
     looksLike:
-      'Chips, flakes, or curled shards of glaze lifting away from the clay body. Unlike crazing (which is cracks in the glaze), shivering means the glaze is physically separating and peeling off. The flakes can be razor-sharp. Shivering is the opposite problem of crazing — here the glaze is under compression rather than tension.',
+      'Chips, flakes, or curled shards of glaze lifting off the clay body. The flakes can be razor-sharp. This is compression failure — the opposite of crazing. The glaze is under too much compression because it has a lower thermal expansion than the clay. It is glaze fit.',
     causes: [
-      'The glaze has a lower thermal expansion than the clay body. As the piece cools, the clay shrinks more than the glaze, putting the glaze under compression until it buckles and pops off.',
-      'Too much silica or lithium in the glaze — these reduce thermal expansion to the point where the glaze doesn\'t expand enough to match the clay.',
-      'Glaze applied too thick on rims and edges, where compression forces are concentrated.',
+      'The glaze has a lower thermal expansion than the clay body — the clay shrinks more, putting the glaze under compression until it buckles and pops off.',
+      'Too much silica or lithium in the glaze.',
       'Incompatible clay body and glaze combination.',
     ],
     fixes: [
-      'Increase the thermal expansion of the glaze by adding more sodium or potassium flux (soda feldspar, nepheline syenite).',
-      'Reduce the amount of silica or lithium-based materials in the glaze.',
-      'Apply the glaze more thinly, especially on rims and sharp edges where shivering tends to start.',
-      'If adjusting the glaze doesn\'t work, try a different clay body with a lower thermal expansion.',
+      'Increase glaze expansion by adding sodium or potassium flux (soda feldspar, nepheline syenite).',
+      'Reduce silica or lithium-based materials.',
+      'If adjusting the glaze doesn\'t work, try a different clay body.',
     ],
     prevention: [
-      'Always test new glaze and clay body combinations on test tiles before production.',
-      'Pay attention to edges and rims — if shivering starts there, it\'s a glaze-fit issue.',
-      'Be aware that shivering can be delayed — a piece might look fine out of the kiln and start flaking weeks later.',
-      'Shivering produces sharp edges. Any piece that shows shivering should not be used as functional ware.',
+      'Always test new glaze-clay combinations on tiles before production.',
+      'Pay attention to edges and rims — shivering starts there first.',
+      'Any piece that shows shivering should not be used as functional ware — the flakes are sharp.',
     ],
   },
   {
     id: 'pinholing',
     name: 'Pinholing',
     emoji: '📌',
-    shortDesc: 'Tiny holes in the glaze surface, like pinholes poked with a needle.',
+    shortDesc: 'Small holes in an otherwise melted surface.',
     looksLike:
-      'Small, round holes dotting the glaze surface. They look like someone poked the glaze with a pin or needle while it was molten. The holes may be isolated or clustered. The glaze surface around each pinhole is usually smooth — the glaze melted properly but didn\'t fill in where gas escaped.',
+      'Small, round holes dotting an otherwise smooth glaze surface. The glaze around each hole melted properly — it just didn\'t fill in where gas escaped. Pinholes are gas and viscosity. Either gas is still escaping when the glaze seals over, or the melt is too viscous to heal itself.',
     causes: [
-      'Gases escaping from the clay body during firing — organic matter, carbonates, and sulfates in the clay decompose and release gas. If the glaze has already sealed over the surface, the gas bubbles poke through and don\'t heal.',
-      'Glaze not reaching full maturity — the kiln didn\'t get hot enough or didn\'t hold at peak temperature long enough for the glaze to smooth over.',
-      'Firing too fast — rushing through the middle temperatures (700°C–1000°C / 1292°F–1832°F) doesn\'t allow enough time for gases to burn out before the glaze seals.',
-      'Under-fired bisque — if the bisque firing didn\'t burn out all the organics, they\'ll off-gas during the glaze firing instead.',
-      'Contamination in the glaze — bits of calcium carbonate (whiting) that didn\'t fully decompose can release CO₂ at the wrong time.',
+      'Gas escaping from the clay body after the glaze has sealed — organics, carbonates, or sulfates that didn\'t burn out in bisque.',
+      'Glaze not reaching full maturity — not hot enough or not held long enough at peak for the melt to smooth over.',
+      'Firing too fast through the mid-range, not giving gases time to escape before the glaze closes.',
     ],
     fixes: [
-      'Add a 15–30 minute hold (soak) at peak temperature to give the glaze time to heal over pinholes.',
-      'Slow down the firing, especially through the "burn-out" zone (700°C–1000°C / 1292°F–1832°F) to let gases escape before the glaze seals.',
-      'Fire your bisque higher — take it to at least cone 04 to ensure all organics and carbonates have been burned out.',
-      'Make sure your glaze materials are well-ground and thoroughly mixed. Coarse particles of whiting or dolomite can cause localized off-gassing.',
-      'Try a slow cool from peak — sometimes dropping 50°C (90°F) and re-soaking helps the glaze smooth over.',
+      'Add a 15–30 minute soak at peak temperature so the glaze has time to heal.',
+      'Slow down through the burn-out zone to let gases escape before the glaze seals.',
+      'Fire your bisque higher to burn out organics and carbonates before the glaze firing.',
     ],
     prevention: [
-      'Bisque fire high enough to burn out all organic matter (cone 04 minimum for most clay bodies).',
-      'Don\'t rush the firing. Give the kiln time in the mid-range temperatures.',
-      'Hold at peak temperature for at least 10–15 minutes, even if your cone is down.',
-      'If using a clay with a lot of organic content (like some red or dark clays), consider a longer bisque hold around 900°C (1652°F).',
+      'Bisque fire high enough to burn out all organic matter.',
+      'Don\'t rush the firing — give the kiln time in the mid-range.',
+      'Hold at peak for at least 10–15 minutes.',
     ],
   },
   {
     id: 'blistering',
-    name: 'Blistering / Bloating',
+    name: 'Blistering',
     emoji: '🫧',
-    shortDesc: 'Large bubbles, craters, or swollen areas in the glaze or clay body.',
+    shortDesc: 'Large bubbles or ruptured craters.',
     looksLike:
-      'Large bubbles, raised blisters, or open craters on the glaze surface. Blisters may be intact (a smooth dome of glaze over a trapped air pocket) or broken (a ragged-edged crater where the bubble popped). Bloating is a related issue where the clay body itself swells and becomes spongy. Severe bloating makes the piece feel lightweight and the clay looks bubbly or foamy inside.',
+      'Large bubbles, raised blisters, or open craters on the glaze surface. Blisters may be intact domes or broken ragged-edged craters. This is aggressive gas entrapment. It usually behaves as if it was fired too hot.',
     causes: [
-      'Over-firing — the kiln went too hot, causing materials in the clay or glaze to over-decompose and release excessive gas.',
-      'Firing too fast at high temperatures — gases generated too quickly for the molten glaze to release them.',
-      'Reduction atmosphere too heavy — strong reduction can generate carbon monoxide trapped in the glaze.',
-      'Thick glaze application — thick coats are more likely to trap gas because the molten glaze layer is deeper and gas takes longer to reach the surface.',
-      'High-calcium or high-zinc glazes are more prone to blistering because they can generate gas from carbonate decomposition at high temperatures.',
-      'Clay body over-fired to the point of bloating — the body itself has started to melt and generate gas internally.',
+      'Over-firing — too hot, causing excessive gas release from clay or glaze materials.',
+      'Firing too fast at high temperatures — gas generated faster than the melt can release it.',
+      'Thick glaze application trapping gas in a deep molten layer.',
     ],
     fixes: [
-      'Reduce peak temperature or soak time — even 1/2 cone lower can make a significant difference.',
-      'Slow down the firing rate in the last 100°C (180°F) before peak.',
-      'Lighten reduction if firing in a gas kiln. Let the atmosphere clear before the glaze seals.',
-      'Apply glaze more thinly.',
-      'For calcium-carbonate-heavy glazes, consider replacing some whiting with wollastonite (calcium silicate), which doesn\'t release CO₂.',
+      'Reduce peak temperature — even half a cone lower can make a significant difference.',
+      'Slow down the firing rate in the last 100°C before peak.',
+      'Apply glaze thinner.',
     ],
     prevention: [
-      'Use witness cones to verify your actual kiln temperature — digital controllers can be off.',
-      'Don\'t over-fire. If cones are bending past their target, your kiln is too hot.',
+      'Use witness cones to verify your actual kiln temperature.',
       'Test glazes at multiple thicknesses to find the sweet spot.',
-      'If using a gas kiln, be deliberate about when you introduce and clear reduction.',
     ],
   },
   {
     id: 'running',
-    name: 'Running / Dripping',
+    name: 'Running',
     emoji: '💧',
-    shortDesc: 'Glaze has flowed down the piece and pooled at the bottom or fused to the shelf.',
+    shortDesc: 'Glaze has flowed down the piece and pooled at the bottom.',
     looksLike:
-      'Thick drips, runs, or curtains of glaze flowing down the surface of the piece. The glaze may pool heavily at the base, fuse the piece to the kiln shelf, or drip off the piece entirely. The top of the piece may look thin or bare where the glaze flowed away.',
+      'Thick drips, runs, or curtains of glaze flowing down the surface. The glaze may pool at the base or fuse the piece to the kiln shelf. Glazes only run for three reasons: They are too thick. They were fired too hot. Or they were too thick and too hot. There is no fourth reason.',
     causes: [
-      'Glaze applied too thick, especially on vertical surfaces.',
-      'Over-firing — the kiln went too hot and the glaze became too fluid.',
-      'Too much flux in the glaze recipe — an over-fluxed glaze melts too aggressively and loses viscosity.',
-      'Glaze not suitable for vertical surfaces — some glazes are formulated for flat tiles and will run on pots.',
-      'Pieces loaded too close to the kiln shelf without enough clearance for drips.',
+      'Applied too thick.',
+      'Fired too hot.',
+      'Applied too thick and fired too hot.',
     ],
     fixes: [
-      'Apply glaze more thinly, especially on the lower half of the piece. Many potters glaze the top 2/3 of the piece and let the glaze flow down during firing.',
-      'Leave the bottom 1/4 inch of the piece unglazed to create a buffer zone.',
+      'Apply glaze thinner, especially on the lower half of the piece.',
       'Reduce peak temperature.',
-      'Add alumina (Al₂O₃) to the glaze — alumina increases viscosity and helps the glaze stay put. Kaolin is the easiest source.',
-      'Place pieces on kiln cookies (small discs of kiln shelf) so if the glaze runs, it ruins the cookie instead of your shelf.',
+      'Leave the bottom of the piece unglazed as a buffer zone.',
     ],
     prevention: [
       'Always wax or leave the bottom of your pots unglazed.',
-      'Test new glazes on a vertical test tile before using them on finished work.',
-      'Keep a kiln cookie under any piece glazed with a runny or unknown glaze.',
-      'If a glaze is known to run, thin your application on the lower half of the piece.',
+      'Use a kiln cookie under any piece glazed with a runny or unknown glaze.',
     ],
   },
   {
     id: 'color-shift',
-    name: 'Color Shift',
+    name: 'Unexpected Color',
     emoji: '🎨',
     shortDesc: 'The fired color looks different from what you expected.',
     looksLike:
-      'The glaze color out of the kiln doesn\'t match your preview or what you intended. It may be duller, more muted, a different hue entirely, or unevenly colored. Common shifts include blues turning green, reds turning brown or pink, and colors looking washed out.',
+      'The color out of the kiln doesn\'t match what you intended — duller, more muted, a different hue, or unevenly colored. Color is chemistry first. Atmosphere, temperature, cooling rate, application thickness, and alkaline-earth selection all matter.',
     causes: [
-      'Kiln atmosphere — oxidation vs. reduction dramatically changes how colorant oxides develop. A glaze designed for oxidation will look very different in reduction, and vice versa.',
-      'Firing temperature off — even 1/2 cone difference can shift color. Under-firing may leave colors underdeveloped; over-firing can burn them out.',
-      'Clay body influence — dark or iron-bearing clay bodies can shift glaze colors, especially with thin applications or translucent glazes.',
-      'Application thickness — many colorants are thickness-sensitive. Thin areas may look different from thick areas on the same piece.',
-      'Colorant interaction — some stains are not stable in certain chemistries. For example, chrome-tin pinks can turn brown or green if there\'s too much zinc in the glaze.',
-      'Cooling rate — some colors (especially iron reds and certain crystalline effects) are sensitive to how fast the kiln cools.',
+      'Kiln atmosphere — oxidation vs. reduction changes how colorant oxides develop.',
+      'Firing temperature off — even half a cone shifts color.',
+      'Clay body influence — dark or iron-bearing clays shift glaze colors.',
+      'Application thickness — many colorants are thickness-sensitive.',
+      'Cooling rate — some colors are sensitive to how fast the kiln cools.',
     ],
     fixes: [
-      'Verify your firing schedule — use witness cones to confirm actual temperature.',
-      'If firing in a gas kiln, check your atmosphere. Consistent light reduction is usually better than heavy or uneven reduction.',
+      'Verify your firing schedule with witness cones.',
       'Try the glaze on a lighter clay body to see the true color.',
-      'Adjust application thickness — make test tiles at thin, medium, and thick to find the best result.',
-      'Check stain compatibility with your glaze chemistry. Stain manufacturers publish compatibility charts.',
-      'For cooling-sensitive glazes, try a slow cool from peak temperature.',
+      'Adjust application thickness — test at thin, medium, and thick.',
+      'For cooling-sensitive colors, try a slow cool from peak.',
     ],
     prevention: [
-      'Always make test tiles on the same clay body you\'ll use for your finished work.',
-      'Fire test tiles in the same kiln and same location where you plan to fire the final piece.',
+      'Make test tiles on the same clay body you\'ll use for finished work.',
+      'Fire test tiles in the same kiln and location as your final piece.',
       'Keep a firing log so you can reproduce successful results.',
-      'When using a new stain, check the manufacturer\'s compatibility chart for your glaze chemistry.',
     ],
   },
   {
     id: 'matte-surface',
-    name: 'Matte Where Glossy Expected',
+    name: 'Matte Instead of Gloss',
     emoji: '🪨',
     shortDesc: 'Glaze should be glossy but came out matte or satin.',
     looksLike:
-      'The glaze has a flat, non-reflective surface where you expected a smooth, glossy finish. It may look chalky, dry, or rough to the touch. The color may also appear duller or more muted than expected.',
+      'A flat, non-reflective surface where you expected gloss. The color may also appear duller than expected. In a properly engineered glaze, matte instead of gloss means underfired. Full stop.',
     causes: [
-      'Under-firing — the glaze didn\'t reach full maturity. It may need more heat or a longer soak at peak temperature.',
-      'Kiln cooling too slowly through the devitrification range — some glazes can crystallize on a slow cool, turning a glossy surface matte.',
-      'Not enough flux in the recipe — the glaze didn\'t fully melt.',
-      'Too much alumina — excess alumina stiffens the melt and can prevent a glossy surface from forming.',
-      'Glaze contamination — if materials are old, wet, or contaminated, the chemistry may have shifted.',
-    ],
-    fixes: [
-      'Fire higher or add a soak at peak temperature (15–30 minutes).',
-      'If slow cooling caused devitrification, try a faster cool after peak. Some potters crash-cool from peak to about 1050°C (1922°F) before slowing down.',
-      'Increase the flux in the recipe — add more frit, feldspar, or whiting.',
-      'Reduce alumina (kaolin) slightly if the glaze is too stiff.',
-      'Mix a fresh batch with new materials to rule out contamination.',
-    ],
-    prevention: [
-      'Always use witness cones to verify temperature — a kiln controller isn\'t always accurate.',
-      'Keep glaze materials stored in sealed, dry containers.',
-      'Test any recipe changes on tiles before applying to finished work.',
-    ],
-  },
-  {
-    id: 'bare-spots',
-    name: 'Bare Spots / Crawl-Back',
-    emoji: '⭕',
-    shortDesc: 'Areas where glaze pulled away, leaving exposed clay patches.',
-    looksLike:
-      'Isolated bare patches where the glaze has retreated from the clay surface. Different from full crawling — crawl-back is usually localized to specific spots rather than covering the whole surface. The edges of the bare spots may show a thickened rim of glaze that pulled back.',
-    causes: [
-      'Grease, oil, or wax contamination on the bisqueware surface — even fingerprints can cause localized repelling.',
-      'Dust, loose particles, or kiln wash flakes on the surface before glazing.',
-      'Glaze applied over a previously waxed area (wax resist that wasn\'t fully removed).',
-      'Surface of the bisque is too smooth or vitrified for the glaze to grip — can happen with over-fired bisque.',
-      'Water repelling — if the bisqueware was stored in a humid or contaminated environment.',
-    ],
-    fixes: [
-      'Clean bisqueware thoroughly before glazing — rinse under running water and let it dry completely.',
-      'Lightly sand any slick or vitrified areas to give the glaze some tooth to grip.',
-      'If wax resist is the culprit, burn it off in a low bisque firing before re-glazing.',
-      'Apply a thin wash of the same glaze over bare spots and re-fire. This only works if the spots aren\'t caused by contamination that\'s still present.',
-    ],
-    prevention: [
-      'Handle bisqueware with clean hands. Wear nitrile gloves if you\'ve been using lotions, oils, or wax.',
-      'Store bisque in a clean, covered area away from dust and kiln wash debris.',
-      'Don\'t apply wax resist to areas you intend to glaze (seems obvious, but mistakes happen).',
-      'If your bisque has been sitting for a while, rinse it before glazing.',
-    ],
-  },
-  {
-    id: 'rough-texture',
-    name: 'Rough / Dry Texture',
-    emoji: '🧱',
-    shortDesc: 'Glaze surface feels rough, gritty, or sandpaper-like instead of smooth.',
-    looksLike:
-      'The glaze surface feels rough, gritty, or abrasive to the touch. It may look textured or granular rather than smooth. The glaze may have partially melted but doesn\'t have a continuous, smooth surface. In severe cases, it can feel like sandpaper.',
-    causes: [
-      'Under-firing — the glaze didn\'t get hot enough to fully melt and smooth out.',
-      'Glaze applied too thin — not enough material to form a continuous glassy layer.',
-      'Refractory materials in the glaze — too much alumina, silica, or other high-melting-point materials that resist melting.',
-      'Contamination with kiln shelf grit, dust, or loose kiln brick particles that fell on the piece during firing.',
-      'Poor glaze mixing — undissolved clumps or poorly dispersed materials create an uneven melt.',
+      'Underfired — the glaze didn\'t reach maturity.',
     ],
     fixes: [
       'Fire higher or add a soak at peak temperature.',
-      'Apply glaze thicker — aim for a smooth, even coat that covers the bisque color completely.',
-      'Re-fire the piece at the correct cone with a hold at peak.',
-      'Sieve your glaze through an 80-mesh screen to remove clumps and ensure even particle size.',
-      'If kiln debris is falling on pieces, clean the kiln ceiling and check for loose bricks or deteriorating elements.',
+      'Verify your actual temperature with witness cones — controllers can be off.',
     ],
     prevention: [
-      'Mix and sieve glaze thoroughly before every use.',
-      'Check specific gravity with a hydrometer to ensure consistent thickness.',
+      'Always use witness cones.',
+      'If a glaze is consistently matte when it shouldn\'t be, your kiln is not reaching temperature.',
+    ],
+  },
+  {
+    id: 'thin-dry',
+    name: 'Thin or Dry Surface',
+    emoji: '🧱',
+    shortDesc: 'Surface feels rough or incomplete.',
+    looksLike:
+      'The glaze surface feels rough, gritty, or incomplete. It may look textured or granular rather than smooth. If the surface feels rough or incomplete, it is thin or underfired.',
+    causes: [
+      'Glaze applied too thin — not enough material to form a complete glassy layer.',
+      'Underfired — the glaze didn\'t get hot enough to fully melt.',
+    ],
+    fixes: [
+      'Apply glaze thicker — the coat should fully cover the bisque color.',
+      'Fire higher or add a soak at peak temperature.',
+      'Re-fire the piece at the correct cone.',
+    ],
+    prevention: [
+      'Check specific gravity to ensure consistent application thickness.',
       'Use witness cones to verify temperature.',
-      'Clean the inside of your kiln regularly, especially the ceiling and shelf undersides.',
-    ],
-  },
-  {
-    id: 'dunting',
-    name: 'Dunting (Cracking)',
-    emoji: '💔',
-    shortDesc: 'Cracks through the entire piece — clay body and glaze — usually during cooling.',
-    looksLike:
-      'Clean, sharp cracks running through both the glaze and the clay body. Unlike crazing (which is only in the glaze), dunting cracks go all the way through the wall of the piece. The cracks are usually straight or gently curved. A dunted piece may crack into two or more pieces. Dunting most often happens during cooling, but can also occur during heating.',
-    causes: [
-      'Cooling too fast through the quartz inversion at 573°C (1063°F) — cristobalite and quartz undergo a rapid volume change at this temperature. If the kiln cools too quickly, the sudden contraction cracks the piece.',
-      'Cooling too fast through the cristobalite inversion at 226°C (439°F) — pieces with high cristobalite content (from high bisque temperatures or high-silica bodies) are especially vulnerable here.',
-      'Uneven thickness in the piece — thin sections cool faster than thick sections, creating stress that leads to cracking.',
-      'Opening the kiln too early while it\'s still hot.',
-      'Large or flat pieces are more susceptible because they have more surface area under stress.',
-    ],
-    fixes: [
-      'Slow the cooling rate through the danger zones: 600°C–500°C (1112°F–932°F) for quartz inversion, and 250°C–200°C (482°F–392°F) for cristobalite.',
-      'Don\'t open the kiln until it\'s completely cool — below 100°C (212°F).',
-      'If you can\'t program a slow cool, simply turn the kiln off and leave it closed. Don\'t prop the lid or open peepholes until the kiln is at room temperature.',
-      'Dunted pieces cannot be repaired. If a piece cracked into clean halves, some potters use kintsugi (gold repair) as an aesthetic choice.',
-    ],
-    prevention: [
-      'Program a controlled slow cool in your kiln controller, especially through the inversion temperatures.',
-      'Design pieces with even wall thickness — avoid dramatic thin-to-thick transitions.',
-      'Be especially careful with large flat pieces (platters, tiles) — they are most vulnerable to dunting.',
-      'Never open the kiln to peek while it\'s cooling above 200°C.',
-    ],
-  },
-  {
-    id: 'sulfur-scumming',
-    name: 'Sulfur Scumming',
-    emoji: '🟡',
-    shortDesc: 'White or yellowish crusty deposits on the clay surface, often under the glaze.',
-    looksLike:
-      'A white, yellowish, or tan crusty film on the surface of the clay body, sometimes under the glaze. It may look like a powder, a rough crust, or a discolored patch. Sulfur scum is most visible on unglazed areas but can also affect glaze adhesion, causing bare spots or crawling where the scum prevents the glaze from bonding.',
-    causes: [
-      'Soluble sulfates in the clay body — many natural clays contain calcium sulfate, sodium sulfate, or other soluble salts that migrate to the surface as the piece dries.',
-      'High-sulfur water used for mixing clay or glaze.',
-      'Under-fired bisque — sulfur compounds may not have fully burned out.',
-      'Sulfur from the kiln atmosphere — can happen in gas kilns burning sulfur-containing fuels.',
-    ],
-    fixes: [
-      'Add 1–2% barium carbonate to the clay body. Barium carbonate reacts with soluble sulfates and converts them to insoluble barium sulfate, which stays trapped inside the clay instead of migrating to the surface. (Note: barium carbonate is toxic — handle with care and follow proper safety protocols.)',
-      'Fire the bisque higher to burn out more sulfur compounds.',
-      'Wash the bisqueware surface with clean water before glazing to remove surface deposits.',
-      'If using a gas kiln, check your fuel for sulfur content.',
-    ],
-    prevention: [
-      'Test your clay body for soluble salts before committing to production.',
-      'Use clean, low-mineral water for mixing clay and glazes.',
-      'Don\'t let bisqueware sit for extended periods in humid conditions, which encourages salt migration.',
-      'If your clay is known to scum, incorporate barium carbonate at the clay-mixing stage.',
     ],
   },
 ];
@@ -558,28 +429,11 @@ export default function TroubleshootingPage() {
           </div>
         </div>
 
-        {/* ─── Still stuck? ─── */}
-        <div className="mt-16 card bg-gradient-to-r from-brand-500 to-brand-600 text-white text-center">
-          <h2 className="text-2xl font-bold mb-3">
-            Still Stuck?
-          </h2>
-          <p className="text-brand-100 mb-6">
-            If your glaze issue doesn&apos;t match anything here, or the fixes aren&apos;t working, we&apos;re happy to take a look. Send us a photo and your firing details.
+        {/* ─── Purchase-specific help ─── */}
+        <div className="mt-16 card bg-clay-100 text-center">
+          <p className="text-clay-700 text-sm">
+            More specific troubleshooting guidance is included with your purchase — check your account dashboard for help tailored to your glaze and firing setup.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/help/contact"
-              className="inline-flex items-center justify-center bg-white text-brand-600 hover:bg-clay-50 font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              Send Us a Message
-            </Link>
-            <Link
-              href="/support"
-              className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              Open a Support Ticket
-            </Link>
-          </div>
         </div>
       </div>
     </div>
