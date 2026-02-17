@@ -64,7 +64,7 @@ export const VISION_BOARD_GLAZES: PublicGlaze[] = [
 
   // ── Purples & Mauves ──
   { id: 'vb-eggplant-velvet', name: 'Eggplant Velvet', color_hex: '#3a2c3f', finish: 'glossy', preview_image_url: '/vision-board/6026_2.5_6388_0.7_6_ox_2.JPG', rating_avg: 4.9, rating_count: 38, created_at: '2025-11-18T16:00:00Z' },
-  { id: 'vb-aubergine-night', name: 'Aubergine Night', color_hex: '#362a42', finish: 'glossy', preview_image_url: '/vision-board/6388_1_6026_2.5_6_ox_2.JPG', rating_avg: 4.9, rating_count: 41, created_at: '2025-11-25T14:00:00Z' },
+  { id: 'vb-aubergine-night', name: 'Aubergine Night', color_hex: '#332a3d', finish: 'glossy', preview_image_url: '/vision-board/6026_2.5_6388_0.8_6_ox_2.JPG', rating_avg: 4.9, rating_count: 41, created_at: '2025-11-25T14:00:00Z' },
   { id: 'vb-charcoal-plum', name: 'Charcoal Plum', color_hex: '#372738', finish: 'glossy', preview_image_url: '/vision-board/6026_2.5_6388_0.6_6_ox_2.JPG', rating_avg: 4.7, rating_count: 26, created_at: '2026-01-10T10:00:00Z' },
   { id: 'vb-dusty-plum', name: 'Dusty Plum', color_hex: '#604e6c', finish: 'glossy', preview_image_url: '/vision-board/6026_1.25_6388_0.2_6_ox_2.JPG', rating_avg: 4.7, rating_count: 25, created_at: '2026-02-05T09:30:00Z' },
   { id: 'vb-wisteria-field', name: 'Wisteria Field', color_hex: '#7a6176', finish: 'glossy', preview_image_url: '/vision-board/6026_1.25_6388_0.15_6_ox_2.JPG', rating_avg: 4.6, rating_count: 21, created_at: '2026-02-12T16:30:00Z' },
