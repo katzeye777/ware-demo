@@ -55,160 +55,221 @@ export function getFiringModel(): { cone: number; atmosphere: string; dataPoints
   };
 }
 
-// ── Cheeky glaze name generator ──
-// Each color family has a pool of fun, unique names.
-// The index ensures no two alternatives get the same name.
+// ── Shade-aware glaze name generator ──
+// Names are organized by color family AND brightness tier (deep/mid/light).
+// A dark navy gets "deep" names, a sky blue gets "light" names.
 
 type ColorFamily = 'red' | 'orange' | 'yellow' | 'green' | 'teal' | 'blue' | 'purple' | 'pink' | 'brown' | 'neutral' | 'dark' | 'light';
+type ShadeTier = 'deep' | 'mid' | 'pale';
 
-const NAME_POOLS: Record<ColorFamily, string[]> = {
-  red: [
-    'Dragon\'s Breath', 'Hot Take', 'Netflix & Kiln', 'Seeing Red', 'Cherry on Top',
-    'Not a Phase, Mom', 'Red Alert', 'Cayenne Pepper', 'The Redder the Better', 'Fired Up',
-    'Like a Boss Sauce', 'Devilish Charm', 'Crimson Tide', 'Boldly Going Red', 'This Is Fine (It\'s Fire)',
-    'Red Carpet Treatment', 'Stop Sign Chic', 'Sriracha Sunrise', 'Code Red Couture', 'Rage Against the Glaze',
-    'Brick by Brick', 'Ruby Slippers', 'Scarlet Fever Dream', 'Lady in Red Stoneware', 'Tomato Tornado',
-    'Mars Attacks', 'Red October', 'Cardinal Sin', 'The Red Wedding (Glaze)', 'Vermillion Thriller',
-    'Cherry Bomb', 'Red Rover', 'Candy Apple Chaos', 'Garnet Glow', 'Flame On',
-    'Poppy Seed Punk', 'Lobster Thermidor', 'Blood Orange Theory', 'Siren Song Scarlet', 'Ember Island',
-    'Red Velvet Revenge', 'Hot Tamale', 'Firecracker Finish', 'Iron Oxide Vibes', 'Crimson & Clover',
-    'Lava Lamp Love', 'Red Planet', 'Rose Thorn', 'Cranberry Courage', 'Volcano Season',
-  ],
-  orange: [
-    'Agent Orange You Glad', 'Clementine Dream', 'Sunset Boulevard', 'Burnt Offering', 'Pumpkin Spice & Everything Nice',
-    'Orange You Beautiful', 'Autumn Calling', 'Marmalade Sky', 'Golden Hour', 'Tang Dynasty',
-    'Campfire Stories', 'Peach Please', 'Apricot Situation', 'Copper Top', 'Ember Glow',
-    'Nacho Average Glaze', 'Tangerine Dream Machine', 'Rust Never Sleeps', 'Carrot Top Secret', 'Mango Unchained',
-    'Orange Is the New Glaze', 'Sweet Potato Pie', 'Amber Alert (Relax, It\'s Pretty)', 'Papaya Don\'t Preach', 'Butterscotch Bandit',
-    'Ginger Snap Decision', 'Harvest Moon Rising', 'Persimmon Says', 'Cantaloupe Elope', 'Marigold Standard',
-    'Turmeric Turnout', 'Pumpkin Patch Adams', 'Kumquat Kudos', 'Mandarin Collar', 'Fox in the Henhouse',
-    'Cheddar Days', 'Flame Broiled', 'Tiger Lily Pad', 'Nectarine Machine', 'Adobe Illustrator',
-    'Terracotta Warrior', 'Cider House Rules', 'Satsuma Sumo', 'Copper Penny Lane', 'Candlelight Vigil',
-    'Caution Tape Couture', 'Daybreak', 'Mars Rover', 'Salamander Style', 'Bonfire Night',
-  ],
-  yellow: [
-    'Mellow Yellow', 'Liquid Sunshine', 'Honey I\'m Home', 'Golden Child', 'Butter Me Up',
-    'Sunshine State of Mind', 'Lemon Drop It Like It\'s Hot', 'Fields of Gold', 'Dandelion Wishes', 'Yellow Brick Road',
-    'Corn Star', 'Main Character Energy (Gold)', 'Goldfinger', 'Sunflower Power', 'Saffron So Good',
-    'Taxi Cab Confession', 'Bee\'s Knees', 'Mustard Seed of Doubt', 'Yolk\'s on You', 'Gilded Age',
-    'Goldilocks Zone', 'Blonde Ambition', 'Canary in a Coal Mine', 'Straw Poll', 'Dijon Vu',
-    'Beeswax Poetic', 'Gold Rush Hour', 'Lemon Zest for Life', 'Daffodil Delight', 'Bananas Foster',
-    'Curry Favor', 'Daisy Chain', 'Electric Slide (Gold)', 'Pineapple Express', 'Buttercup Bravado',
-    'Harvest Gold Standard', 'Champagne Problems', 'Amber Waves', 'Solar Flair', 'Mac & Cheese Louise',
-    'King Midas Mix', 'Maize Runner', 'Citrine Scene', 'Flax to the Max', 'Turmeric & Turmoil',
-    'Yellow Submarine', 'Fool\'s Gold Rush', 'Egg Yolk of Dawn', 'Topaz Tango', 'Lemonade Stand',
-  ],
-  green: [
-    'Kermit\'s Envy', 'It\'s Not Easy Being Green', 'Mean, Green, Ceramic Machine', 'Sage Advice', 'Forest Bathing',
-    'Jade Roller Coaster', 'Moss Def', 'Olive Garden (No Breadsticks)', 'Emerald City Limits', 'Matcha Made in Heaven',
-    'Mint Condition', 'Green With Envases', 'Fern Gully', 'Pistachio Finish', 'Celadon My Wayward Son',
-    'Soylent Green Screen', 'Avocado Toast of the Town', 'Chloro-filled With Joy', 'The Grass Is Glazer', 'Shamrock Shake Down',
-    'Basil Fawlty', 'Green Day Dream', 'Money Talks Green', 'Pine Sol Brother', 'Spruce Willis',
-    'Juniper Breeze', 'Lime in the Coconut', 'Pickle Rick', 'Ivy League', 'Leaf Me Alone',
-    'Patina Party', 'Verde Verdict', 'Garden Variety Gorgeous', 'Thyme After Thyme', 'Eucalyptus Epiphany',
-    'Malachite Manifest', 'Clover Field', 'Pea Coat', 'Chartreuse the Day', 'Aloe There',
-    'Greenhouse Effect', 'Kelly Green Jelly Bean', 'Serpentine Surprise', 'Broccoli Rob', 'Moss Angeles',
-    'Frog Prince', 'Artichoke Heart', 'Succulent Success', 'Verdigris Verdict', 'Lichen Subscribe',
-  ],
-  teal: [
-    'Teal the End of Time', 'Teal Deal', 'Deep End of the Pool', 'Aqua Velvet', 'Ocean Motion',
-    'Lagoon Tunes', 'Tropical Depression (Pretty One)', 'Mermaid Money', 'Sea You Later', 'Surf\'s Up Buttercup',
-    'Coral Reef Belief', 'Wave Goodbye', 'Under the Sea-ramic', 'Turquoise & Calamity', 'Seaside Serenade',
-    'Atlantis Found', 'Teal We Meet Again', 'Poseidon Adventure', 'Seafoam & Circumstance', 'Current Mood: Teal',
-    'Aqua-ward Silence', 'Tide Pod (Don\'t Eat It)', 'Marina Del Glaze', 'Reef Madness', 'Calypso Breeze',
-    'Blue Lagoon Platoon', 'Deep Sea Disco', 'Oyster Bay Area', 'Brackish Bliss', 'Whale Hello There',
-    'Neptune\'s Throne', 'Bermuda Triangle', 'Caspian Casanova', 'Abyss-mal Beauty', 'Kelp Me Rhonda',
-    'Maelstrom Mellow', 'Tidal Wave Hello', 'Sargasso Sass', 'Nautical Nonsense', 'Seaglass Serenade',
-    'Fjord Explorer', 'Shoal Business', 'Pelago Panache', 'Atoll of Surprises', 'Corsica Crush',
-    'Scuba Doo', 'Estuary Elegance', 'Monsoon Mood', 'Pacific Standard Teal', 'Harbor Lights',
-  ],
-  blue: [
-    'Feelin\' Blue-tiful', 'Kind of a Big Teal', 'Mood Indigo', 'Blue Steel', 'Midnight Snack',
-    'Sky\'s the Limit', 'Navy SEAL of Approval', 'Cobalt Intentions', 'Berry Blue-tiful', 'Da Ba Dee Da Ba Die',
-    'Blueprint', 'Azure You Sure?', 'Sapphire So Good', 'True Blue Brew', 'Deep Blue Something',
-    'Bluetiful Day', 'Out of the Blue Print', 'Blue\'s Clues & Glazes', 'Denim & Diamonds', 'Lapis Lazuli Dazuli',
-    'Cerulean & Certain', 'Periwinkle Twinkle', 'Blueberry Muffin Top', 'Cornflower Power Hour', 'Prussian Roulette',
-    'Once in a Blue Kiln', 'Ol\' Blue Eyes', 'Royal Flush of Blue', 'Baby Blue Bayou', 'Beyond the Pale Blue',
-    'Ultramarine Corps', 'Fjord Focus', 'Delphi Blue Oracle', 'Stratosphere', 'Ice Ice Baby Blue',
-    'Jazz in Blue', 'Mazzerine Canteen', 'Steel Town Blue', 'Cornflake Blue', 'Bluebell Bottom',
-    'Ocean\'s Eleven Blue', 'Blue Ridge Mountain', 'Starry Night Shift', 'Cyan Later', 'Powder Room',
-    'Cold Shoulder Blue', 'Catalina Sky', 'The Blues Brothers', 'Yonder Blue', 'Twilight Zone Blue',
-  ],
-  purple: [
-    'Purple Reign', 'Your Royal Glaze-ness', 'Grape Expectations', 'Lavender Haze (It\'s Me, Hi)', 'Thanos Approved',
-    'Plum\'s the Word', 'Violet Femmes', 'Eggplant Emoji Energy', 'Amethyst of Time', 'Majestic AF',
-    'The Purple People Eater', 'Orchid You Not', 'Wisteria Lane', 'Iris I May', 'Aubergine Dream',
-    'Prince of Tiles', 'Ultraviolet Tendencies', 'Barney\'s Revenge', 'Plum Crazy', 'Tyrian Try-hard',
-    'Mauve-rick', 'Imperial Decree', 'Boysenberry Binge', 'His Royal Glazeness', 'Purple Prose',
-    'The Color Purple Rain', 'Byzantium & Bass', 'Mulberry Bush League', 'Heliotrope It Up', 'Concord Grape Escape',
-    'Lilac Attack', 'Fig Newton\'s Law', 'Magenta-l Breakdown', 'Damson in Distress', 'Prune Tune',
-    'Hibiscus Ruckus', 'Jam Session', 'Elderberry Statement', 'Wine Not', 'Thistle While You Work',
-    'Blackberry Cobbler', 'Violet Hour', 'Royal Jelly Roll', 'Indigo Montoya', 'Crocus Pocus',
-    'Sangria Sunset', 'Radicchio Radical', 'Plum Line', 'Twilight Sparkle', 'Purple Haze Craze',
-  ],
-  pink: [
-    'On Wednesdays We Wear Pink', 'Think Pink', 'Flamingo Dancer', 'Blush Hour', 'Rose All Day',
-    'Pink Floyd', 'Tickled Pink', 'Millennial Pink (Still Relevant)', 'Salmon Rushdie', 'Coral Story, Bro',
-    'Peach Pit', 'Cotton Candy Crush', 'Bubblegum Pop', 'La Vie en Rose', 'Carnation Street',
-    'Hot Pink Panther', 'Fuchsia Is Futile', 'Pink Cadillac', 'Berry Interesting', 'Rosé All Day Every Day',
-    'Pink-credible', 'Candy Floss Boss', 'Tutu Much', 'Petal Pusher', 'Magenta Agenda',
-    'Blush Fund', 'Shrimp Cocktail Hour', 'Flamingo Road', 'Guava La Vista', 'Beet Drop',
-    'Rhubarb Crumble', 'Dragonfruit Drama', 'Tulip Fever', 'Pink Slip (the Good Kind)', 'Lychee Liberty',
-    'Conch Shell Game', 'Ballet Slipper', 'Prom Night Pink', 'Hibiscus Kiss', 'Watermelon Sugar',
-    'Cosmopolitan', 'Camellia Court', 'Passionfruit Punch', 'Prima Donna Pink', 'Rose Quartz Quest',
-    'Sakura Storm', 'Begonia Bonanza', 'Pink Lemonade Stand', 'Azalea A-List', 'Strawberry Fields Forever',
-  ],
-  brown: [
-    'Espresso Yourself', 'Mocha Lotta Love', 'Fifty Shades of Clay', 'Chocolate Thunder', 'Hazelnut Hustle',
-    'Cinnamon Toast Kiln', 'Coffee First', 'Leather Bound & Down', 'Walnut Whip', 'Mud Season Chic',
-    'Chestnut Roasting', 'Toffee Nose', 'Caramel Macchi-pot-o', 'Umber-lievable', 'Sienna Miller Time',
-    'Grounds for Divorce', 'Cocoa Loco', 'Truffle Shuffle', 'Nutmeg Nerd', 'Brownie Points',
-    'Latte Art School', 'Almond Joy Division', 'Pecan Pie Chart', 'S\'mores the Merrier', 'Bean There Done That',
-    'Acorn Squash Goals', 'Bark Worse Than Bite', 'Maple Story', 'Cork Board Meeting', 'Tobacco Road Trip',
-    'Mushroom Cloud Nine', 'Driftwood Daydream', 'Praline Praxis', 'Cardboard Box Office', 'Gingerbread Architect',
-    'Teddy Bear Necessities', 'Earthworm Jim Bean', 'Biscotti Bandito', 'Peanut Butter Jelly Time', 'Khaki Wacky',
-    'Saddle Up', 'Tamarind Tango', 'Sepia Tone Poem', 'Pumpernickel Pickle', 'Coconut Husk Musk',
-    'Burnt Toast of the Town', 'Teak Peek', 'Ganache Panache', 'Allspice Advice', 'Timber Tantrum',
-  ],
-  neutral: [
-    'Fifty Shades of Grey', 'Concrete Jungle', 'Silver Lining', 'Stone Cold Stunner', 'Ashen Faced',
-    'Pewter Pan', 'Fog Machine', 'Smoke & Mirrors', 'Elephant in the Room', 'Graphite Attitude',
-    'Steel Yourself', 'Cloudy With a Chance', 'Dove Bar None', 'Iron Maiden (Glaze Edition)', 'Cement Your Legacy',
-    'Grayscale of Justice', 'Battleship Potemkin', 'Silver Screen Dream', 'Pebble Beach Body', 'Mercury Rising',
-    'Aluminum Foiled Again', 'Overcast & Overjoyed', 'Pumice Party', 'Nickel & Dime Store', 'Drizzle Sizzle',
-    'Greyhound Bus Stop', 'Tin Foil Hat', 'Platinum Blonde Ambition', 'Gravel Travel', 'Haze Days',
-    'Meteorite Delight', 'Chinchilla Thriller', 'Zinc About It', 'Flannel Feelings', 'Chrome Dome Home',
-    'Moonstone Cold', 'Shale Mail', 'Frost Advisory', 'Slate of the Art', 'Dusty Springfield',
-    'Titanium Cranium', 'Cobblestone Throne', 'Nimbus Cumulus Fuss', 'Cinder-ella', 'Quicksilver Lining',
-    'Steel Magnolia', 'Rainy Day Fund', 'Zinc Sync', 'Iron Will Power', 'Monochrome Syndrome',
-  ],
-  dark: [
-    'Dark Side of the Kiln', 'Void Where Prohibited', 'Into the Abyss', 'Midnight Express', 'Shadow Realm',
-    'Dark Mode', 'Black Sheep Chic', 'Onyx & On', 'Pitch Perfect', 'Coal Comfort',
-    'Inkwell Done', 'Raven Mad', 'The Darkest Timeline', 'Obsidian Flow', 'Black Mirror Finish',
-    'Event Horizon', 'Vantablack Tie', 'None More Black', 'Black Gold Texas Tea', 'Total Eclipse',
-    'Gotham After Dark', 'Black Panther Prowl', 'Dark Roast Coast', 'Licorice Twist', 'Deep Space Nine Glaze',
-    'Batman\'s Cape', 'Charcoal Sketch Comedy', 'Noir Narrative', 'Dark Chocolate Decadence', 'Espresso Lane',
-    'Panther Paw', 'Carbon Copy Cat', 'Sable Fable', 'After Midnight Mint', 'Black Tie Optional',
-    'Dark Horse Race', 'Velvet Underground', 'Tar Pit Grit', 'Nighthawk Diner', 'Blackout Curtain Call',
-    'Darkroom Bloom', 'Graphene Scene', 'Iron Curtain Call', 'Black Mamba', 'Shadow Puppet Show',
-    'Dark Matter of Fact', 'Abyss Gazes Back', 'New Moon Mood', 'Raven\'s Caw-fee', 'Black Sabbath Bath',
-  ],
-  light: [
-    'Cloud Nine', 'Snow Problem', 'Pale Ale-baster', 'Bone Dry Wit', 'Porcelain Throne',
-    'Pearl Clutcher', 'Ivory Tower Power', 'Vanilla Sky-high', 'Eggshell Game', 'Linen & Things',
-    'Cream of the Crop', 'Whiteout Conditions', 'Clean Slate', 'Blank Canvas Energy', 'Off-White Album',
-    'Ghost Protocol', 'Wedding Dress Rehearsal', 'Sugar Coat of Arms', 'Marshmallow Pillow', 'Coconut Milk Run',
-    'Rice Paper Trail', 'Chalk Talk', 'Snowflake Unique', 'Milk Glass Act', 'Meringue Wave',
-    'Cauliflower Power', 'Cotton Ball Drop', 'Tofu Can Do', 'Angel Food Cake Walk', 'Daisy Fresh Prince',
-    'Opal Optimism', 'Alabaster Disaster (Not)', 'White Noise Reduction', 'Mozzarella Fella', 'Frosted Flake',
-    'Birch Please', 'Starlight Express', 'Moonbeam Team', 'Cumulus Hummus', 'Powder Puff Stuff',
-    'Talcum Calm', 'Seashell Sell', 'Whipped Cream Scene', 'Paper Moon', 'Dove Tail Cocktail',
-    'Arctic Fox Trot', 'Bone China Syndrome', 'Milk & Honey Do', 'Feather Duster Buster', 'White Russian Standard',
-  ],
+const SHADE_NAMES: Record<ColorFamily, Record<ShadeTier, string[]>> = {
+  red: {
+    deep: [
+      'Dragon\'s Breath', 'Red October', 'Crimson Tide', 'Garnet Glow', 'Cardinal Sin',
+      'Brick by Brick', 'Mars Attacks', 'Iron Oxide Vibes', 'Ember Island', 'Volcano Season',
+      'The Red Wedding (Glaze)', 'Vermillion Thriller', 'Lava Lamp Love', 'Cranberry Courage', 'Red Velvet Revenge',
+    ],
+    mid: [
+      'Hot Take', 'Netflix & Kiln', 'Cherry on Top', 'Red Alert', 'Fired Up',
+      'Seeing Red', 'Cayenne Pepper', 'Sriracha Sunrise', 'Cherry Bomb', 'Red Rover',
+      'Lobster Thermidor', 'Flame On', 'Firecracker Finish', 'Stop Sign Chic', 'Candy Apple Chaos',
+    ],
+    pale: [
+      'Rose Thorn', 'Siren Song Scarlet', 'Poppy Seed Punk', 'Red Carpet Treatment', 'Crimson & Clover',
+      'Tomato Tornado', 'Lady in Red Stoneware', 'Scarlet Fever Dream', 'Ruby Slippers', 'Hot Tamale',
+      'Code Red Couture', 'Rage Against the Glaze', 'Red Planet', 'Boldly Going Red', 'Devilish Charm',
+    ],
+  },
+  orange: {
+    deep: [
+      'Burnt Offering', 'Rust Never Sleeps', 'Terracotta Warrior', 'Copper Top', 'Adobe Illustrator',
+      'Ember Glow', 'Bonfire Night', 'Flame Broiled', 'Copper Penny Lane', 'Mars Rover',
+      'Tobacco Road Trip', 'Cider House Rules', 'Salamander Style', 'Fox in the Henhouse', 'Harvest Moon Rising',
+    ],
+    mid: [
+      'Sunset Boulevard', 'Pumpkin Spice & Everything Nice', 'Tangerine Dream Machine', 'Clementine Dream', 'Orange Is the New Glaze',
+      'Campfire Stories', 'Mango Unchained', 'Marigold Standard', 'Tiger Lily Pad', 'Nectarine Machine',
+      'Persimmon Says', 'Mandarin Collar', 'Satsuma Sumo', 'Tang Dynasty', 'Pumpkin Patch Adams',
+    ],
+    pale: [
+      'Peach Please', 'Apricot Situation', 'Golden Hour', 'Marmalade Sky', 'Cantaloupe Elope',
+      'Butterscotch Bandit', 'Sweet Potato Pie', 'Papaya Don\'t Preach', 'Daybreak', 'Candlelight Vigil',
+      'Ginger Snap Decision', 'Kumquat Kudos', 'Cheddar Days', 'Caution Tape Couture', 'Nacho Average Glaze',
+    ],
+  },
+  yellow: {
+    deep: [
+      'Goldfinger', 'Saffron So Good', 'Mustard Seed of Doubt', 'Curry Favor', 'King Midas Mix',
+      'Harvest Gold Standard', 'Amber Waves', 'Dijon Vu', 'Turmeric & Turmoil', 'Topaz Tango',
+      'Gilded Age', 'Gold Rush Hour', 'Fields of Gold', 'Fool\'s Gold Rush', 'Citrine Scene',
+    ],
+    mid: [
+      'Mellow Yellow', 'Sunshine State of Mind', 'Sunflower Power', 'Bee\'s Knees', 'Solar Flair',
+      'Yolk\'s on You', 'Yellow Brick Road', 'Corn Star', 'Pineapple Express', 'Yellow Submarine',
+      'Mac & Cheese Louise', 'Bananas Foster', 'Buttercup Bravado', 'Maize Runner', 'Electric Slide (Gold)',
+    ],
+    pale: [
+      'Liquid Sunshine', 'Honey I\'m Home', 'Golden Child', 'Butter Me Up', 'Lemon Drop It Like It\'s Hot',
+      'Dandelion Wishes', 'Lemon Zest for Life', 'Daffodil Delight', 'Champagne Problems', 'Daisy Chain',
+      'Lemonade Stand', 'Egg Yolk of Dawn', 'Flax to the Max', 'Straw Poll', 'Beeswax Poetic',
+    ],
+  },
+  green: {
+    deep: [
+      'Forest Bathing', 'Emerald City Limits', 'Ivy League', 'Pine Sol Brother', 'Spruce Willis',
+      'Malachite Manifest', 'Serpentine Surprise', 'Verdigris Verdict', 'Moss Def', 'Moss Angeles',
+      'Fern Gully', 'Greenhouse Effect', 'Juniper Breeze', 'Patina Party', 'Verde Verdict',
+    ],
+    mid: [
+      'Kermit\'s Envy', 'Mean, Green, Ceramic Machine', 'Jade Roller Coaster', 'Kelly Green Jelly Bean', 'Shamrock Shake Down',
+      'The Grass Is Glazer', 'Clover Field', 'Pickle Rick', 'Frog Prince', 'Leaf Me Alone',
+      'Green Day Dream', 'Artichoke Heart', 'Broccoli Rob', 'Pea Coat', 'Chloro-filled With Joy',
+    ],
+    pale: [
+      'Sage Advice', 'Matcha Made in Heaven', 'Mint Condition', 'Pistachio Finish', 'Celadon My Wayward Son',
+      'Aloe There', 'Chartreuse the Day', 'Avocado Toast of the Town', 'Succulent Success', 'Lichen Subscribe',
+      'Thyme After Thyme', 'Eucalyptus Epiphany', 'Garden Variety Gorgeous', 'Basil Fawlty', 'Green With Envases',
+    ],
+  },
+  teal: {
+    deep: [
+      'Deep End of the Pool', 'Atlantis Found', 'Neptune\'s Throne', 'Abyss-mal Beauty', 'Deep Sea Disco',
+      'Bermuda Triangle', 'Caspian Casanova', 'Maelstrom Mellow', 'Sargasso Sass', 'Fjord Explorer',
+      'Kelp Me Rhonda', 'Reef Madness', 'Monsoon Mood', 'Blue Lagoon Platoon', 'Pacific Standard Teal',
+    ],
+    mid: [
+      'Teal the End of Time', 'Ocean Motion', 'Mermaid Money', 'Turquoise & Calamity', 'Teal We Meet Again',
+      'Tidal Wave Hello', 'Under the Sea-ramic', 'Calypso Breeze', 'Nautical Nonsense', 'Corsica Crush',
+      'Teal Deal', 'Lagoon Tunes', 'Marina Del Glaze', 'Pelago Panache', 'Shoal Business',
+    ],
+    pale: [
+      'Aqua Velvet', 'Sea You Later', 'Surf\'s Up Buttercup', 'Seafoam & Circumstance', 'Seaside Serenade',
+      'Current Mood: Teal', 'Seaglass Serenade', 'Harbor Lights', 'Atoll of Surprises', 'Estuary Elegance',
+      'Scuba Doo', 'Wave Goodbye', 'Aqua-ward Silence', 'Oyster Bay Area', 'Whale Hello There',
+    ],
+  },
+  blue: {
+    deep: [
+      'Mood Indigo', 'Midnight Snack', 'Navy SEAL of Approval', 'Deep Blue Something', 'Prussian Roulette',
+      'Ultramarine Corps', 'Starry Night Shift', 'Twilight Zone Blue', 'Mazzerine Canteen', 'Blue Ridge Mountain',
+      'Cobalt Intentions', 'Lapis Lazuli Dazuli', 'Once in a Blue Kiln', 'Royal Flush of Blue', 'The Blues Brothers',
+    ],
+    mid: [
+      'Feelin\' Blue-tiful', 'Blue Steel', 'True Blue Brew', 'Blueprint', 'Sapphire So Good',
+      'Denim & Diamonds', 'Cerulean & Certain', 'Ocean\'s Eleven Blue', 'Ol\' Blue Eyes', 'Jazz in Blue',
+      'Bluetiful Day', 'Da Ba Dee Da Ba Die', 'Blue\'s Clues & Glazes', 'Fjord Focus', 'Steel Town Blue',
+    ],
+    pale: [
+      'Sky\'s the Limit', 'Azure You Sure?', 'Baby Blue Bayou', 'Beyond the Pale Blue', 'Ice Ice Baby Blue',
+      'Periwinkle Twinkle', 'Cornflower Power Hour', 'Powder Room', 'Catalina Sky', 'Yonder Blue',
+      'Cold Shoulder Blue', 'Stratosphere', 'Cyan Later', 'Bluebell Bottom', 'Delphi Blue Oracle',
+    ],
+  },
+  purple: {
+    deep: [
+      'Purple Reign', 'Thanos Approved', 'Eggplant Emoji Energy', 'Aubergine Dream', 'Tyrian Try-hard',
+      'Byzantium & Bass', 'Blackberry Cobbler', 'Indigo Montoya', 'Elderberry Statement', 'Wine Not',
+      'Concord Grape Escape', 'Fig Newton\'s Law', 'Damson in Distress', 'Prune Tune', 'Sangria Sunset',
+    ],
+    mid: [
+      'Grape Expectations', 'Violet Femmes', 'Amethyst of Time', 'Prince of Tiles', 'Plum Crazy',
+      'Imperial Decree', 'Jam Session', 'Purple Haze Craze', 'Violet Hour', 'His Royal Glazeness',
+      'Royal Jelly Roll', 'Boysenberry Binge', 'Hibiscus Ruckus', 'Radicchio Radical', 'Plum Line',
+    ],
+    pale: [
+      'Lavender Haze (It\'s Me, Hi)', 'Your Royal Glaze-ness', 'Orchid You Not', 'Wisteria Lane', 'Iris I May',
+      'Mauve-rick', 'Lilac Attack', 'Heliotrope It Up', 'Thistle While You Work', 'Crocus Pocus',
+      'Twilight Sparkle', 'Magenta-l Breakdown', 'Plum\'s the Word', 'Purple Prose', 'Mulberry Bush League',
+    ],
+  },
+  pink: {
+    deep: [
+      'Hot Pink Panther', 'Fuchsia Is Futile', 'Magenta Agenda', 'Beet Drop', 'Dragonfruit Drama',
+      'Rhubarb Crumble', 'Berry Interesting', 'Cosmopolitan', 'Passionfruit Punch', 'Watermelon Sugar',
+      'Hibiscus Kiss', 'Prima Donna Pink', 'Strawberry Fields Forever', 'Sakura Storm', 'Begonia Bonanza',
+    ],
+    mid: [
+      'Think Pink', 'Flamingo Dancer', 'Rose All Day', 'Pink Floyd', 'Tickled Pink',
+      'Coral Story, Bro', 'Carnation Street', 'Pink Cadillac', 'Flamingo Road', 'Guava La Vista',
+      'Tulip Fever', 'Prom Night Pink', 'Azalea A-List', 'Pink Lemonade Stand', 'Camellia Court',
+    ],
+    pale: [
+      'Blush Hour', 'Millennial Pink (Still Relevant)', 'Salmon Rushdie', 'Cotton Candy Crush', 'Bubblegum Pop',
+      'La Vie en Rose', 'Peach Pit', 'Petal Pusher', 'Ballet Slipper', 'Rose Quartz Quest',
+      'Blush Fund', 'Conch Shell Game', 'Pink Slip (the Good Kind)', 'Lychee Liberty', 'Candy Floss Boss',
+    ],
+  },
+  brown: {
+    deep: [
+      'Espresso Yourself', 'Chocolate Thunder', 'Fifty Shades of Clay', 'Walnut Whip', 'Cocoa Loco',
+      'Truffle Shuffle', 'Dark Roast Coast', 'Ganache Panache', 'Pumpernickel Pickle', 'Burnt Toast of the Town',
+      'Grounds for Divorce', 'Leather Bound & Down', 'Bark Worse Than Bite', 'Tobacco Road Trip', 'Saddle Up',
+    ],
+    mid: [
+      'Mocha Lotta Love', 'Cinnamon Toast Kiln', 'Coffee First', 'Hazelnut Hustle', 'Toffee Nose',
+      'Caramel Macchi-pot-o', 'Sienna Miller Time', 'Chestnut Roasting', 'Brownie Points', 'Nutmeg Nerd',
+      'Terracotta Warrior', 'Gingerbread Architect', 'Tamarind Tango', 'Allspice Advice', 'Timber Tantrum',
+    ],
+    pale: [
+      'Latte Art School', 'Almond Joy Division', 'Pecan Pie Chart', 'S\'mores the Merrier', 'Bean There Done That',
+      'Mushroom Cloud Nine', 'Driftwood Daydream', 'Cork Board Meeting', 'Biscotti Bandito', 'Peanut Butter Jelly Time',
+      'Khaki Wacky', 'Maple Story', 'Teak Peek', 'Sepia Tone Poem', 'Coconut Husk Musk',
+    ],
+  },
+  neutral: {
+    deep: [
+      'Graphite Attitude', 'Steel Yourself', 'Iron Maiden (Glaze Edition)', 'Battleship Potemkin', 'Slate of the Art',
+      'Titanium Cranium', 'Cobblestone Throne', 'Iron Will Power', 'Chrome Dome Home', 'Meteorite Delight',
+      'Cement Your Legacy', 'Grayscale of Justice', 'Shale Mail', 'Cinder-ella', 'Iron Curtain Call',
+    ],
+    mid: [
+      'Fifty Shades of Grey', 'Concrete Jungle', 'Stone Cold Stunner', 'Pewter Pan', 'Smoke & Mirrors',
+      'Elephant in the Room', 'Pebble Beach Body', 'Gravel Travel', 'Chinchilla Thriller', 'Zinc About It',
+      'Flannel Feelings', 'Nickel & Dime Store', 'Monochrome Syndrome', 'Steel Magnolia', 'Zinc Sync',
+    ],
+    pale: [
+      'Silver Lining', 'Fog Machine', 'Cloudy With a Chance', 'Dove Bar None', 'Mercury Rising',
+      'Overcast & Overjoyed', 'Haze Days', 'Frost Advisory', 'Moonstone Cold', 'Quicksilver Lining',
+      'Drizzle Sizzle', 'Platinum Blonde Ambition', 'Pumice Party', 'Rainy Day Fund', 'Dusty Springfield',
+    ],
+  },
+  dark: {
+    deep: [
+      'Dark Side of the Kiln', 'Void Where Prohibited', 'Into the Abyss', 'Shadow Realm', 'Event Horizon',
+      'Vantablack Tie', 'None More Black', 'Total Eclipse', 'Black Mirror Finish', 'Obsidian Flow',
+      'Abyss Gazes Back', 'Dark Matter of Fact', 'Velvet Underground', 'Tar Pit Grit', 'Black Mamba',
+    ],
+    mid: [
+      'Dark Mode', 'Midnight Express', 'Onyx & On', 'Pitch Perfect', 'Coal Comfort',
+      'Inkwell Done', 'Raven Mad', 'The Darkest Timeline', 'Black Gold Texas Tea', 'Gotham After Dark',
+      'Dark Roast Coast', 'Charcoal Sketch Comedy', 'Noir Narrative', 'Nighthawk Diner', 'Shadow Puppet Show',
+    ],
+    pale: [
+      'Black Sheep Chic', 'Dark Horse Race', 'Carbon Copy Cat', 'Sable Fable', 'Black Tie Optional',
+      'After Midnight Mint', 'Panther Paw', 'Darkroom Bloom', 'Graphene Scene', 'New Moon Mood',
+      'Blackout Curtain Call', 'Raven\'s Caw-fee', 'Licorice Twist', 'Deep Space Nine Glaze', 'Batman\'s Cape',
+    ],
+  },
+  light: {
+    deep: [
+      'Bone Dry Wit', 'Porcelain Throne', 'Pearl Clutcher', 'Ivory Tower Power', 'Eggshell Game',
+      'Opal Optimism', 'Alabaster Disaster (Not)', 'Bone China Syndrome', 'Seashell Sell', 'Dove Tail Cocktail',
+      'Talcum Calm', 'Paper Moon', 'Arctic Fox Trot', 'Milk & Honey Do', 'Feather Duster Buster',
+    ],
+    mid: [
+      'Cloud Nine', 'Vanilla Sky-high', 'Linen & Things', 'Cream of the Crop', 'Clean Slate',
+      'Blank Canvas Energy', 'Off-White Album', 'Marshmallow Pillow', 'Coconut Milk Run', 'Rice Paper Trail',
+      'Meringue Wave', 'Cotton Ball Drop', 'Angel Food Cake Walk', 'Daisy Fresh Prince', 'Starlight Express',
+    ],
+    pale: [
+      'Snow Problem', 'Pale Ale-baster', 'Whiteout Conditions', 'Ghost Protocol', 'Wedding Dress Rehearsal',
+      'Sugar Coat of Arms', 'Chalk Talk', 'Snowflake Unique', 'Milk Glass Act', 'Cauliflower Power',
+      'Frosted Flake', 'Birch Please', 'Moonbeam Team', 'Cumulus Hummus', 'Powder Puff Stuff',
+    ],
+  },
 };
 
-function classifyColor(hex: string): ColorFamily {
+function classifyColor(hex: string): { family: ColorFamily; tier: ShadeTier } {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
@@ -218,12 +279,18 @@ function classifyColor(hex: string): ColorFamily {
   const min = Math.min(r, g, b);
   const sat = max - min;
 
+  // Determine shade tier based on brightness
+  const tier: ShadeTier = brightness < 90 ? 'deep' : brightness > 180 ? 'pale' : 'mid';
+
   // Very dark
-  if (brightness < 40) return 'dark';
+  if (brightness < 40) return { family: 'dark', tier };
   // Very light
-  if (brightness > 220 && sat < 40) return 'light';
+  if (brightness > 220 && sat < 40) return { family: 'light', tier };
   // Low saturation = neutral
-  if (sat < 30) return brightness > 140 ? 'light' : brightness > 60 ? 'neutral' : 'dark';
+  if (sat < 30) {
+    const family = brightness > 140 ? 'light' : brightness > 60 ? 'neutral' : 'dark';
+    return { family, tier };
+  }
 
   // Hue-based classification
   const hue = (() => {
@@ -238,34 +305,35 @@ function classifyColor(hex: string): ColorFamily {
   })();
 
   // Brown detection: low-mid brightness, warm hue, moderate saturation
-  if (hue >= 15 && hue <= 45 && brightness < 160 && sat < 150) return 'brown';
-  if (hue >= 0 && hue <= 30 && brightness < 120 && sat < 120) return 'brown';
+  if (hue >= 15 && hue <= 45 && brightness < 160 && sat < 150) return { family: 'brown', tier };
+  if (hue >= 0 && hue <= 30 && brightness < 120 && sat < 120) return { family: 'brown', tier };
 
   // Pink detection: high red, moderate blue, low green
-  if (r > 180 && b > 100 && g < b && g < r) return 'pink';
-  if (hue >= 300 && hue <= 360 && brightness > 120) return 'pink';
+  if (r > 180 && b > 100 && g < b && g < r) return { family: 'pink', tier };
+  if (hue >= 300 && hue <= 360 && brightness > 120) return { family: 'pink', tier };
 
-  if (hue >= 0 && hue < 15) return 'red';
-  if (hue >= 15 && hue < 45) return 'orange';
-  if (hue >= 45 && hue < 70) return 'yellow';
-  if (hue >= 70 && hue < 160) return 'green';
-  if (hue >= 160 && hue < 200) return 'teal';
-  if (hue >= 200 && hue < 270) return 'blue';
-  if (hue >= 270 && hue < 330) return 'purple';
-  if (hue >= 330) return 'red';
+  let family: ColorFamily;
+  if (hue >= 0 && hue < 15) family = 'red';
+  else if (hue >= 15 && hue < 45) family = 'orange';
+  else if (hue >= 45 && hue < 70) family = 'yellow';
+  else if (hue >= 70 && hue < 160) family = 'green';
+  else if (hue >= 160 && hue < 200) family = 'teal';
+  else if (hue >= 200 && hue < 270) family = 'blue';
+  else if (hue >= 270 && hue < 330) family = 'purple';
+  else if (hue >= 330) family = 'red';
+  else family = 'neutral';
 
-  return 'neutral';
+  return { family, tier };
 }
 
 // Track used names within a single findGlaze call to prevent duplicates
 let usedNamesThisRound: Set<string> = new Set();
 
 function generateGlazeName(hex: string, index: number): string {
-  const family = classifyColor(hex);
-  const pool = NAME_POOLS[family];
+  const { family, tier } = classifyColor(hex);
+  const pool = SHADE_NAMES[family][tier];
 
-  // Use index to pick from the pool, wrapping around if needed
-  // Start at a deterministic offset based on the hex to add variety across queries
+  // Start at a deterministic offset based on the hex for variety
   const hexOffset = parseInt(hex.slice(1, 4), 16) % pool.length;
   const baseIndex = (hexOffset + index) % pool.length;
 
@@ -278,7 +346,19 @@ function generateGlazeName(hex: string, index: number): string {
     }
   }
 
-  // Fallback: all names used (shouldn't happen with 15 per pool)
+  // Fallback: try other tiers in the same family
+  const allTiers: ShadeTier[] = ['deep', 'mid', 'pale'];
+  for (const t of allTiers) {
+    if (t === tier) continue;
+    const fallbackPool = SHADE_NAMES[family][t];
+    for (let i = 0; i < fallbackPool.length; i++) {
+      if (!usedNamesThisRound.has(fallbackPool[i])) {
+        usedNamesThisRound.add(fallbackPool[i]);
+        return fallbackPool[i];
+      }
+    }
+  }
+
   return `${family.charAt(0).toUpperCase() + family.slice(1)} #${index + 1}`;
 }
 
