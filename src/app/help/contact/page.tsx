@@ -1,7 +1,24 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Mail, LifeBuoy, Clock, MessageSquare, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Mail, LifeBuoy, Clock, MessageSquare, ArrowRight, Send, CheckCircle } from 'lucide-react';
 
 export default function ContactPage() {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    subject: 'General Question',
+    message: '',
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Demo mode — just show success
+    setSubmitted(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-clay-50 to-brand-50">
       <div className="container mx-auto px-4 py-12 max-w-3xl">
@@ -29,27 +46,115 @@ export default function ContactPage() {
           </p>
         </div>
 
-        {/* Contact Options */}
+        {/* Contact Form */}
         <div className="space-y-6 mb-12">
-          {/* Email */}
           <div className="card">
-            <div className="flex items-start space-x-4">
+            <div className="flex items-start space-x-4 mb-6">
               <div className="bg-brand-100 rounded-lg p-3 flex-shrink-0">
-                <Mail className="w-6 h-6 text-brand-600" />
+                <Send className="w-6 h-6 text-brand-600" />
               </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-clay-900 mb-1">Email</h2>
-                <p className="text-sm text-clay-600 mb-3">
-                  Best for general questions, glaze advice, or anything that doesn&apos;t need an immediate reply.
+              <div>
+                <h2 className="text-xl font-bold text-clay-900 mb-1">Send Us a Message</h2>
+                <p className="text-sm text-clay-600">
+                  Fill out the form below and we&apos;ll get back to you.
                 </p>
-                <a
-                  href="mailto:info@ceramicmaterialsworkshop.com"
-                  className="text-brand-600 hover:text-brand-700 font-semibold"
-                >
-                  info@ceramicmaterialsworkshop.com
-                </a>
               </div>
             </div>
+
+            {submitted ? (
+              <div className="text-center py-8">
+                <div className="flex justify-center mb-4">
+                  <div className="bg-green-100 rounded-full p-3">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-clay-900 mb-2">Message Sent!</h3>
+                <p className="text-sm text-clay-600 mb-6">
+                  Thanks for reaching out. We&apos;ll get back to you within 1 business day.
+                </p>
+                <button
+                  onClick={() => {
+                    setSubmitted(false);
+                    setForm({ name: '', email: '', subject: 'General Question', message: '' });
+                  }}
+                  className="text-brand-600 hover:text-brand-700 font-semibold text-sm"
+                >
+                  Send another message
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-clay-700 mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="input-field"
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-clay-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="input-field"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-clay-700 mb-1">
+                    Subject
+                  </label>
+                  <select
+                    value={form.subject}
+                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                    className="input-field"
+                  >
+                    <option>General Question</option>
+                    <option>Glaze Advice</option>
+                    <option>Order Issue</option>
+                    <option>Large Batch Inquiry</option>
+                    <option>Glaze Troubleshooting Help</option>
+                    <option>Feedback</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-clay-700 mb-1">
+                    Message
+                  </label>
+                  <textarea
+                    required
+                    rows={5}
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    className="input-field resize-none"
+                    placeholder="Tell us what's on your mind..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn-primary w-full sm:w-auto flex items-center justify-center space-x-2"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Send Message</span>
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Support Tickets */}
@@ -84,7 +189,7 @@ export default function ContactPage() {
                 <h2 className="text-xl font-bold text-clay-900 mb-1">Response Times</h2>
                 <div className="text-sm text-clay-600 space-y-2">
                   <p>
-                    We aim to respond to all emails and support tickets within <strong>1 business day</strong>.
+                    We aim to respond to all messages and support tickets within <strong>1 business day</strong>.
                   </p>
                   <p>
                     Our hours are <strong>Monday – Friday, 9 AM – 5 PM Eastern</strong>. Messages received on weekends or holidays will be answered the next business day.

@@ -567,12 +567,12 @@ export default function TroubleshootingPage() {
             If your glaze issue doesn&apos;t match anything here, or the fixes aren&apos;t working, we&apos;re happy to take a look. Send us a photo and your firing details.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href="mailto:info@ceramicmaterialsworkshop.com?subject=Glaze%20Troubleshooting%20Help"
+            <Link
+              href="/help/contact"
               className="inline-flex items-center justify-center bg-white text-brand-600 hover:bg-clay-50 font-semibold px-6 py-3 rounded-lg transition-colors"
             >
-              Email Us a Photo
-            </a>
+              Send Us a Message
+            </Link>
             <Link
               href="/support"
               className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold px-6 py-3 rounded-lg transition-colors"

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Leaf, Droplets } from 'lucide-react';
 
 interface BatchSizeSelectorProps {
@@ -185,12 +186,12 @@ export default function BatchSizeSelector({ value, onChange, format, onFormatCha
       {/* Contact for larger orders */}
       <p className="text-xs text-clay-500 text-center">
         Need more than 5 gallons?{' '}
-        <a
-          href="mailto:info@ceramicmaterialsworkshop.com?subject=Large%20Batch%20Order%20Inquiry"
+        <Link
+          href="/help/contact"
           className="text-brand-600 hover:text-brand-700 underline"
         >
           Contact us
-        </a>
+        </Link>
       </p>
     </div>
   );

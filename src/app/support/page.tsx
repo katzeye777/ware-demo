@@ -252,16 +252,13 @@ export default function SupportPage() {
         </div>
 
         <div className="card text-center">
-          <h3 className="font-semibold text-clay-900 mb-2">Email Support</h3>
+          <h3 className="font-semibold text-clay-900 mb-2">Contact Us</h3>
           <p className="text-sm text-clay-600 mb-4">
-            Reach us directly via email
+            Send us a message directly
           </p>
-          <a
-            href="mailto:info@ceramicmaterialsworkshop.com"
-            className="text-brand-600 hover:text-brand-700 text-sm font-medium"
-          >
-            info@ceramicmaterialsworkshop.com →
-          </a>
+          <Link href="/help/contact" className="text-brand-600 hover:text-brand-700 text-sm font-medium">
+            Go to Contact Form →
+          </Link>
         </div>
 
         <div className="card text-center">
