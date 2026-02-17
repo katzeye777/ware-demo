@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, ChevronDown, BookOpen, Search } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
-   Flaw Data — 9 glaze flaws
+   Flaw Data — 8 glaze flaws
    ───────────────────────────────────────────── */
 
 interface GlazeFlaw {
@@ -113,28 +113,6 @@ const GLAZE_FLAWS: GlazeFlaw[] = [
       'Bisque fire high enough to burn out all organic matter.',
       'Don\'t rush the firing — give the kiln time in the mid-range.',
       'Hold at peak for at least 10–15 minutes.',
-    ],
-  },
-  {
-    id: 'blistering',
-    name: 'Blistering',
-    emoji: '🫧',
-    shortDesc: 'Large bubbles or ruptured craters.',
-    looksLike:
-      'Large bubbles, raised blisters, or open craters on the glaze surface. Blisters may be intact domes or broken ragged-edged craters. This is aggressive gas entrapment. It usually behaves as if it was fired too hot.',
-    causes: [
-      'Over-firing — too hot, causing excessive gas release from clay or glaze materials.',
-      'Firing too fast at high temperatures — gas generated faster than the melt can release it.',
-      'Thick glaze application trapping gas in a deep molten layer.',
-    ],
-    fixes: [
-      'Reduce peak temperature — even half a cone lower can make a significant difference.',
-      'Slow down the firing rate in the last 100°C before peak.',
-      'Apply glaze thinner.',
-    ],
-    prevention: [
-      'Use witness cones to verify your actual kiln temperature.',
-      'Test glazes at multiple thicknesses to find the sweet spot.',
     ],
   },
   {
