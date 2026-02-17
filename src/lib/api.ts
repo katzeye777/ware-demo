@@ -35,6 +35,7 @@ export interface ColorMatch {
 export interface GlazeDesignRequest {
   target_color_hex: string;
   finish: 'glossy' | 'matte' | 'satin';
+  application_method?: 'dip' | 'brush' | 'spray';
   batch_size_grams: number;
   firing_temp_cone?: string;
 }

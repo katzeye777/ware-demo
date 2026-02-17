@@ -7,6 +7,7 @@ import { useDesignStore } from '@/lib/store';
 import { findGlaze, generatePreview, saveGlaze, setFiringModel } from '@/lib/demo-api';
 import ColorPicker from './components/ColorPicker';
 import FinishSelector from './components/FinishSelector';
+import ApplicationSelector from './components/ApplicationSelector';
 import FiringSelector from './components/FiringSelector';
 import BatchSizeSelector from './components/BatchSizeSelector';
 import ResultsPanel from './components/ResultsPanel';
@@ -27,6 +28,7 @@ export default function DesignPage() {
 
   const [color, setColor] = useState('#e4533d');
   const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>('glossy');
+  const [application, setApplication] = useState<'dip' | 'brush' | 'spray'>('dip');
   const [cone, setCone] = useState('6');
   const [atmosphere, setAtmosphere] = useState('ox');
   const [batchSize, setBatchSize] = useState(350);
@@ -190,6 +192,11 @@ export default function DesignPage() {
           {/* Finish Selector */}
           <div className="card">
             <FinishSelector value={finish} onChange={setFinish} />
+          </div>
+
+          {/* Application Method */}
+          <div className="card">
+            <ApplicationSelector value={application} onChange={setApplication} />
           </div>
 
           {/* Firing Temperature */}
