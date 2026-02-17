@@ -14,6 +14,7 @@ export default function Header() {
   const navLinks = [
     { href: '/design', label: 'Design' },
     { href: '/vision-board', label: 'Vision Board' },
+    { href: '/library', label: 'My Glazes' },
     { href: '/waitlist', label: 'Join Waitlist' },
     { href: '/help', label: 'Help' },
   ];

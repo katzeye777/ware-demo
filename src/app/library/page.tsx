@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api, SavedGlaze } from '@/lib/api';
+import { VISION_BOARD_GLAZES } from '@/app/vision-board/data';
 import GlazeCard from '@/components/GlazeCard';
 import { Palette, Plus, Lock, Globe } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LibraryPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isDemoMode } = useAuth();
   const [glazes, setGlazes] = useState<SavedGlaze[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,10 +30,29 @@ export default function LibraryPage() {
 
   const loadGlazes = async () => {
     try {
-      const data = await api.getUserGlazes();
-      setGlazes(data);
+      if (isDemoMode) {
+        // In demo mode, populate from the vision board tiles
+        const demoGlazes: SavedGlaze[] = VISION_BOARD_GLAZES.map((g) => ({
+          id: g.id,
+          user_id: 'demo-user',
+          name: g.name,
+          target_color_hex: g.color_hex,
+          finish: g.finish,
+          batch_size_grams: 350,
+          selected_match_id: g.id,
+          is_private: false,
+          created_at: g.created_at,
+          preview_image_url: g.preview_image_url,
+        }));
+        setGlazes(demoGlazes);
+      } else {
+        const data = await api.getUserGlazes();
+        setGlazes(data);
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to load glazes');
+      if (!isDemoMode) {
+        setError(err.message || 'Failed to load glazes');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -55,12 +75,16 @@ export default function LibraryPage() {
     );
   }
 
+  const displayName = user?.name || 'My';
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-7xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-clay-900 mb-2">My Library</h1>
+          <h1 className="text-3xl font-bold text-clay-900 mb-2">
+            {displayName}&apos;s Glazes
+          </h1>
           <p className="text-clay-600">
             {glazes.length} saved glaze{glazes.length !== 1 ? 's' : ''}
           </p>
@@ -163,8 +187,7 @@ export default function LibraryPage() {
           <h3 className="font-semibold text-clay-900 mb-2">About Your Library</h3>
           <p className="text-sm text-clay-700">
             Your saved glazes are stored here for easy access. Public glazes appear on the Vision
-            Board for others to discover. Private glazes remain exclusive to you and require a
-            $4.99 add-on fee.
+            Board for others to discover. Private glazes remain exclusive to you.
           </p>
         </div>
       )}

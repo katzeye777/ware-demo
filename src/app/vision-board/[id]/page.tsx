@@ -1,54 +1,50 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { api, PublicGlaze } from '@/lib/api';
+import { useState, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Star, ShoppingCart, Share2, Heart, AlertCircle } from 'lucide-react';
+import { useCartStore } from '@/lib/store';
+import { VISION_BOARD_GLAZES } from '@/app/vision-board/data';
+import { Star, ShoppingCart, Share2, Heart, AlertCircle, Palette, Camera, Plus } from 'lucide-react';
 import Link from 'next/link';
 
-export default function PublicGlazeDetailPage() {
+const PRICE_PER_PINT = 15.0;
+const PINT_GRAMS = 350;
+const WET_SURCHARGE = 1.30;
+
+const BATCH_SIZES = [
+  { value: 350, label: 'Pint (350g)' },
+  { value: 500, label: '500g' },
+  { value: 1000, label: '1 kg' },
+  { value: 2000, label: '2 kg' },
+  { value: 5000, label: '5 kg' },
+];
+
+function calculatePrice(grams: number, isWet: boolean = false): string {
+  const base = (grams / PINT_GRAMS) * PRICE_PER_PINT;
+  const total = isWet ? base * WET_SURCHARGE : base;
+  return total.toFixed(2);
+}
+
+export default function GlazeDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { user } = useAuth();
-  const [glaze, setGlaze] = useState<PublicGlaze | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [isFavorited, setIsFavorited] = useState(false);
+  const addItem = useCartStore((s) => s.addItem);
 
   const glazeId = params.id as string;
 
-  useEffect(() => {
-    if (glazeId) {
-      loadGlazeDetails();
-    }
-  }, [glazeId]);
+  // Look up glaze from static data
+  const glaze = useMemo(
+    () => VISION_BOARD_GLAZES.find((g) => g.id === glazeId) ?? null,
+    [glazeId]
+  );
 
-  const loadGlazeDetails = async () => {
-    try {
-      const data = await api.getPublicGlaze(glazeId);
-      setGlaze(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load glaze details');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePurchase = () => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    // In a real implementation, this would add to cart or start checkout
-    router.push('/checkout');
-  };
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [batchSize, setBatchSize] = useState(350);
+  const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const handleFavorite = () => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
     setIsFavorited(!isFavorited);
   };
 
@@ -60,34 +56,35 @@ export default function PublicGlazeDetailPage() {
           text: `Check out this custom glaze: ${glaze?.name}`,
           url: window.location.href,
         });
-      } catch (err) {
+      } catch {
         // User cancelled share
       }
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
-          <p className="mt-4 text-clay-600">Loading glaze...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleAddToCart = () => {
+    if (!glaze) return;
+    addItem({
+      glazeId: glaze.id,
+      glazeName: glaze.name,
+      batchSizeGrams: batchSize,
+      colorHex: glaze.color_hex,
+      isPrivate: false,
+      price: Number(calculatePrice(batchSize, glazeFormat === 'wet')),
+    });
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
 
-  if (error || !glaze) {
+  if (!glaze) {
     return (
       <div className="container mx-auto px-4 py-12 max-w-2xl">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-clay-900 mb-2">Glaze Not Found</h2>
-          <p className="text-clay-600 mb-6">{error || 'This glaze does not exist.'}</p>
+          <p className="text-clay-600 mb-6">This glaze does not exist or may have been removed.</p>
           <Link href="/vision-board" className="btn-primary">
             Back to Vision Board
           </Link>
@@ -103,15 +100,15 @@ export default function PublicGlazeDetailPage() {
         href="/vision-board"
         className="text-brand-600 hover:text-brand-700 text-sm font-medium mb-6 inline-block"
       >
-        ← Back to Vision Board
+        &larr; Back to Vision Board
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Left Column - Preview */}
+        {/* Left Column - Images */}
         <div>
-          <div className="sticky top-24">
+          <div className="sticky top-24 space-y-4">
             {/* Main Image */}
-            <div className="aspect-square w-full rounded-xl overflow-hidden bg-clay-100 shadow-xl mb-4">
+            <div className="aspect-square w-full rounded-xl overflow-hidden bg-clay-100 shadow-xl">
               {glaze.preview_image_url ? (
                 <img
                   src={glaze.preview_image_url}
@@ -126,52 +123,94 @@ export default function PublicGlazeDetailPage() {
               )}
             </div>
 
-            {/* Color Swatch */}
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div
-                className="w-16 h-16 rounded-lg color-swatch shadow-md"
-                style={{ backgroundColor: glaze.color_hex }}
-              />
-              <div>
-                <p className="text-sm text-clay-600">Color Code</p>
-                <p className="text-xl font-mono font-bold text-clay-900">
-                  {glaze.color_hex.toUpperCase()}
-                </p>
+            {/* Color Comparison */}
+            <div className="card">
+              <h4 className="text-sm font-medium text-clay-700 mb-3">Color Reference</h4>
+              <div className="flex items-stretch gap-3">
+                {/* Fired sample swatch */}
+                <div className="flex-1">
+                  <div
+                    className="w-full h-20 rounded-lg color-swatch border border-clay-200"
+                    style={{ backgroundColor: glaze.color_hex }}
+                  />
+                  <p className="text-xs text-clay-500 mt-2 text-center">Software prediction</p>
+                  <p className="text-xs font-mono font-bold text-clay-900 text-center">
+                    {glaze.color_hex.toUpperCase()}
+                  </p>
+                </div>
+                {/* Test tile thumbnail */}
+                {glaze.preview_image_url && (
+                  <div className="flex-1">
+                    <div className="w-full h-20 rounded-lg overflow-hidden border border-clay-200">
+                      <img
+                        src={glaze.preview_image_url}
+                        alt="Fired sample"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-xs text-clay-500 mt-2 text-center">Fired test tile</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Community Gallery */}
+            <div className="card">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium text-clay-700">Community Gallery</h4>
+                <button className="text-xs text-brand-600 hover:text-brand-700 font-medium flex items-center space-x-1">
+                  <Camera className="w-3 h-3" />
+                  <span>Upload</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {/* Placeholder community photo slots */}
+                {['Mug', 'Bowl', 'Vase'].map((item) => (
+                  <div
+                    key={item}
+                    className="aspect-square rounded-lg border-2 border-dashed border-clay-200 flex flex-col items-center justify-center"
+                    style={{
+                      background: `linear-gradient(135deg, ${glaze.color_hex}18, ${glaze.color_hex}30)`,
+                    }}
+                  >
+                    <Plus className="w-5 h-5 text-clay-300 mb-1" />
+                    <span className="text-[10px] text-clay-400 font-medium">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-clay-400 mt-2 text-center">
+                Share photos of your pieces glazed with {glaze.name}
+              </p>
+            </div>
+
+            {/* Favorite + Share */}
             <div className="flex gap-3">
               <button
-                onClick={handlePurchase}
-                className="btn-primary flex-1 flex items-center justify-center space-x-2"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                <span>Purchase This Glaze</span>
-              </button>
-
-              <button
                 onClick={handleFavorite}
-                className={`btn-outline flex items-center justify-center ${
+                className={`btn-outline flex-1 flex items-center justify-center space-x-2 ${
                   isFavorited ? 'bg-red-50 border-red-500 text-red-600' : ''
                 }`}
               >
                 <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+                <span>{isFavorited ? 'Saved' : 'Save'}</span>
               </button>
-
-              <button onClick={handleShare} className="btn-outline flex items-center justify-center">
+              <button
+                onClick={handleShare}
+                className="btn-outline flex-1 flex items-center justify-center space-x-2"
+              >
                 <Share2 className="w-5 h-5" />
+                <span>Share</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Right Column - Details */}
+        {/* Right Column - Details + Ordering */}
         <div>
+          {/* Name + Rating + Finish */}
           <div className="mb-6">
             <h1 className="text-4xl font-bold text-clay-900 mb-3">{glaze.name}</h1>
 
-            {/* Rating */}
             {glaze.rating_avg !== undefined && glaze.rating_avg > 0 && (
               <div className="flex items-center space-x-2 mb-4">
                 <div className="flex items-center space-x-1">
@@ -200,18 +239,8 @@ export default function PublicGlazeDetailPage() {
             </div>
           </div>
 
-          {/* Description */}
-          <div className="prose max-w-none mb-8">
-            <h2 className="text-xl font-semibold text-clay-900 mb-4">About This Glaze</h2>
-            <p className="text-clay-700">
-              This beautiful {glaze.finish} glaze features a rich {glaze.color_hex} color tone.
-              Perfect for adding a unique touch to your ceramic pieces. Each batch is carefully
-              mixed to ensure consistent color matching and quality.
-            </p>
-          </div>
-
           {/* Specifications */}
-          <div className="card mb-8">
+          <div className="card mb-6">
             <h3 className="font-semibold text-clay-900 mb-4">Specifications</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
@@ -227,65 +256,111 @@ export default function PublicGlazeDetailPage() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-clay-600">Available Batch Sizes</span>
-                <span className="font-medium text-clay-900">100g - 5000g</span>
+                <span className="text-clay-600">Firing Temperature</span>
+                <span className="font-medium text-clay-900">Cone 6</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-clay-600">Firing Temperature</span>
-                <span className="font-medium text-clay-900">Cone 6 (recommended)</span>
+                <span className="text-clay-600">Atmosphere</span>
+                <span className="font-medium text-clay-900">Oxidation</span>
               </div>
             </div>
           </div>
 
+          {/* Batch Size Selector */}
+          <div className="card mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-clay-900">Order</h3>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-brand-600">
+                  ${calculatePrice(batchSize, glazeFormat === 'wet')}
+                </div>
+                <div className="text-xs text-clay-500">estimated price</div>
+              </div>
+            </div>
+
+            {/* Batch size buttons */}
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {BATCH_SIZES.map((size) => (
+                <button
+                  key={size.value}
+                  onClick={() => setBatchSize(size.value)}
+                  className={`px-2 py-2.5 rounded-lg border-2 font-medium text-xs transition-all text-center ${
+                    batchSize === size.value
+                      ? 'border-brand-500 bg-brand-50 text-brand-700'
+                      : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
+                  }`}
+                >
+                  {size.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Dry / Wet toggle */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button
+                onClick={() => setGlazeFormat('dry')}
+                className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg border-2 font-medium text-sm transition-all ${
+                  glazeFormat === 'dry'
+                    ? 'border-green-500 bg-green-50 text-green-800'
+                    : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
+                }`}
+              >
+                <span>Dry Powder</span>
+              </button>
+              <button
+                onClick={() => setGlazeFormat('wet')}
+                className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg border-2 font-medium text-sm transition-all ${
+                  glazeFormat === 'wet'
+                    ? 'border-amber-500 bg-amber-50 text-amber-800'
+                    : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
+                }`}
+              >
+                <span>Pre-Mixed</span>
+              </button>
+            </div>
+
+            {/* Add to Cart */}
+            <button
+              onClick={handleAddToCart}
+              className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-semibold text-lg transition-all ${
+                addedToCart
+                  ? 'bg-green-600 text-white'
+                  : 'btn-primary'
+              }`}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span>{addedToCart ? 'Added!' : 'Add to Cart'}</span>
+            </button>
+          </div>
+
+          {/* Customize This Color */}
+          <Link
+            href={`/design?color=${encodeURIComponent(glaze.color_hex)}`}
+            className="w-full btn-outline flex items-center justify-center space-x-2 py-3 mb-6"
+          >
+            <Palette className="w-5 h-5" />
+            <span>Customize This Color</span>
+          </Link>
+
           {/* Application Tips */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h4 className="font-semibold text-blue-900 mb-2">Application Tips</h4>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Apply 2-3 coats for best color saturation</li>
-              <li>• Allow each coat to dry completely before applying the next</li>
-              <li>• Results may vary based on clay body and kiln atmosphere</li>
-              <li>• Test fire a sample piece before glazing final work</li>
+              <li>&bull; Apply 2-3 coats for best color saturation</li>
+              <li>&bull; Allow each coat to dry completely before applying the next</li>
+              <li>&bull; Results may vary based on clay body and kiln atmosphere</li>
+              <li>&bull; Test fire a sample piece before glazing final work</li>
             </ul>
           </div>
 
-          {/* Reviews Section */}
-          <div>
-            <h3 className="text-2xl font-semibold text-clay-900 mb-6">Customer Reviews</h3>
-
-            {/* Review placeholder */}
-            <div className="space-y-6">
-              <div className="card">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 rounded-full bg-brand-200 flex items-center justify-center text-brand-700 font-semibold">
-                    JD
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h4 className="font-semibold text-clay-900">Jane Doe</h4>
-                      <div className="flex items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-clay-700">
-                      Absolutely love this glaze! The color is exactly as shown and the finish
-                      is beautiful. Will definitely order again.
-                    </p>
-                    <p className="text-xs text-clay-500 mt-2">2 weeks ago</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <button className="btn-secondary">
-                  Load More Reviews
-                </button>
-              </div>
-            </div>
+          {/* Sizing Guide */}
+          <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
+            <h4 className="font-semibold text-clay-700 mb-2">Sizing Guide</h4>
+            <ul className="text-xs space-y-1 text-clay-600">
+              <li>&bull; Pint (350g): 4-6 small pieces</li>
+              <li>&bull; 1 kg: 12-16 medium pieces</li>
+              <li>&bull; 5 kg: studio or classroom quantity</li>
+            </ul>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useDesignStore } from '@/lib/store';
 import { findGlaze, generatePreview, saveGlaze, setFiringModel } from '@/lib/demo-api';
@@ -14,6 +14,21 @@ import ResultsPanel from './components/ResultsPanel';
 import { Sparkles, Save, ArrowRight, Image as ImageIcon } from 'lucide-react';
 
 export default function DesignPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+          <p className="mt-4 text-clay-600">Loading designer...</p>
+        </div>
+      </div>
+    }>
+      <DesignPageContent />
+    </Suspense>
+  );
+}
+
+function DesignPageContent() {
   const router = useRouter();
   const { user } = useAuth();
   const {
@@ -25,6 +40,8 @@ export default function DesignPage() {
     setSelectedMatchId,
     setGlazeName,
   } = useDesignStore();
+
+  const searchParams = useSearchParams();
 
   const [color, setColor] = useState('#e4533d');
   const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>('glossy');
@@ -38,6 +55,14 @@ export default function DesignPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Pre-fill color from ?color= query param (e.g. from "Customize This Color" link)
+  useEffect(() => {
+    const colorParam = searchParams.get('color');
+    if (colorParam && /^#[0-9A-Fa-f]{6}$/.test(colorParam)) {
+      setColor(colorParam);
+    }
+  }, [searchParams]);
 
   const handleFindGlaze = async () => {
     // No login gate in demo mode — anyone can use it

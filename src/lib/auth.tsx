@@ -12,7 +12,7 @@ const DEMO_MODE = true;
 const DEMO_USER: User = {
   id: 'demo-user',
   email: 'demo@ware.studio',
-  name: 'Guest',
+  name: 'Rose Katz',
   created_at: new Date().toISOString(),
 };
 
