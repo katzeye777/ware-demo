@@ -141,7 +141,7 @@ export default function DesignPage() {
           Design Your Perfect Glaze
         </h1>
         <p className="text-lg text-clay-600 max-w-2xl mx-auto">
-          Select your desired color, choose your finish, and let our algorithm find the perfect glaze match
+          Pick your color, choose your finish, and we'll craft a glaze made just for you
         </p>
       </div>
 

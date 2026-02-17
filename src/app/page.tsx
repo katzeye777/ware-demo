@@ -19,7 +19,7 @@ export default function HomePage() {
             </h1>
 
             <p className="text-xl md:text-2xl text-brand-50 mb-10 max-w-2xl mx-auto">
-              Choose any color. We'll match it with precision and deliver your custom glaze ready to use.
+              Imagine a color. Any color. Now imagine it on your next piece — that's where this starts.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -46,7 +46,7 @@ export default function HomePage() {
               How It Works
             </h2>
             <p className="text-xl text-clay-600 max-w-2xl mx-auto">
-              From color selection to your studio door in three simple steps
+              From your imagination to your studio shelf in three simple steps
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export default function HomePage() {
                 Choose Your Color
               </h3>
               <p className="text-clay-600">
-                Pick any color using our advanced color picker, upload a photo, or browse our gallery
+                Pick a color from your imagination, snap a photo of something that inspires you, or browse the gallery
               </p>
             </div>
 
@@ -68,10 +68,10 @@ export default function HomePage() {
                 <span className="text-2xl font-bold text-brand-600">2</span>
               </div>
               <h3 className="text-xl font-semibold text-clay-900 mb-3">
-                We Match It Precisely
+                See Your Recipe
               </h3>
               <p className="text-clay-600">
-                Our algorithm finds the perfect glaze formula to match your color with lab-tested accuracy
+                Your color is matched to a real glaze recipe built from thousands of fired test tiles
               </p>
             </div>
 
@@ -80,10 +80,10 @@ export default function HomePage() {
                 <span className="text-2xl font-bold text-brand-600">3</span>
               </div>
               <h3 className="text-xl font-semibold text-clay-900 mb-3">
-                Delivered Ready to Use
+                Make It Yours
               </h3>
               <p className="text-clay-600">
-                Your custom glaze arrives at your door, professionally mixed and ready to apply
+                Your custom glaze arrives at your studio door, ready to bring your vision to life
               </p>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-clay-900 mb-4">
-              Why Choose Ware?
+              Built Around Your Craft
             </h2>
           </div>
 
@@ -105,10 +105,10 @@ export default function HomePage() {
                 <Sparkles className="w-7 h-7 text-brand-600" />
               </div>
               <h3 className="font-semibold text-lg text-clay-900 mb-2">
-                Color Precision
+                Get the Color You See
               </h3>
               <p className="text-sm text-clay-600">
-                Industry-leading ΔE color matching for exact results every time
+                Every recipe comes from real fired test tiles — so what you see is what comes out of the kiln
               </p>
             </div>
 
@@ -117,10 +117,10 @@ export default function HomePage() {
                 <Shield className="w-7 h-7 text-brand-600" />
               </div>
               <h3 className="font-semibold text-lg text-clay-900 mb-2">
-                Quality Guaranteed
+                Consistent, Every Time
               </h3>
               <p className="text-sm text-clay-600">
-                Every batch is quality tested before shipping to ensure consistency
+                Your glaze is tested before it ships — so you can focus on making, not troubleshooting
               </p>
             </div>
 
@@ -129,10 +129,10 @@ export default function HomePage() {
                 <Truck className="w-7 h-7 text-brand-600" />
               </div>
               <h3 className="font-semibold text-lg text-clay-900 mb-2">
-                Fast Delivery
+                Studio-Ready Fast
               </h3>
               <p className="text-sm text-clay-600">
-                Your custom glaze ships within 5-7 business days, ready to use
+                From your idea to your shelf in 5–7 days — so you stay in your creative flow
               </p>
             </div>
 
@@ -141,10 +141,10 @@ export default function HomePage() {
                 <Star className="w-7 h-7 text-brand-600" />
               </div>
               <h3 className="font-semibold text-lg text-clay-900 mb-2">
-                Expert Support
+                You're Not Alone
               </h3>
               <p className="text-sm text-clay-600">
-                Our ceramics experts are here to help with any questions
+                Have a question about firing, application, or color? Real ceramicists are here to help
               </p>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-clay-900 mb-4">
-                Loved by Ceramic Artists
+                From Makers Like You
               </h2>
             </div>
 
@@ -214,7 +214,7 @@ export default function HomePage() {
               Ready to Create?
             </h2>
             <p className="text-xl text-brand-50 mb-10">
-              Join hundreds of ceramic artists who've discovered the future of glaze design
+              You have the vision — now get the glaze to match it
             </p>
             <Link href="/design" className="inline-flex items-center justify-center space-x-2 bg-white text-brand-600 hover:bg-brand-50 font-semibold px-10 py-5 rounded-lg transition-colors text-lg shadow-xl">
               <Sparkles className="w-6 h-6" />

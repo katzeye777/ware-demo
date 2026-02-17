@@ -31,7 +31,7 @@ export default function VisionBoardPage() {
             Vision Board
           </h1>
           <p className="text-lg text-clay-600 max-w-2xl mx-auto">
-            Explore our curated collection of custom glazes. Get inspired and find your perfect color.
+            Browse colors that other makers have brought to life. Find the spark for your next piece.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export default function VisionBoardPage() {
                 Ready to Create Your Own?
               </h2>
               <p className="mb-6 text-brand-100">
-                Design a custom glaze matched to your exact vision
+                Turn the color in your head into a glaze on your shelf
               </p>
               <a
                 href="/design"

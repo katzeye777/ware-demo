@@ -132,9 +132,9 @@ export default function BatchSizeSelector({ value, onChange, format, onFormatCha
           <div className="flex items-start space-x-2">
             <Leaf className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium">The better choice</p>
+              <p className="font-medium">Costs less, ships cheaper</p>
               <p className="text-xs text-green-700 mt-1">
-                Ships lighter, arrives faster, and lasts indefinitely on your shelf. Just add water when you&apos;re ready — we include <a href="#" className="underline font-medium">mixing instructions and videos</a>.
+                Lighter package means lower shipping costs. Lasts indefinitely on your shelf — just add water when you&apos;re ready. We include <a href="#" className="underline font-medium">mixing instructions and videos</a>.
               </p>
             </div>
           </div>

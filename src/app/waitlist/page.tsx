@@ -91,8 +91,8 @@ export default function WaitlistPage() {
             Coming Soon
           </h1>
           <p className="text-lg text-clay-600 max-w-lg mx-auto">
-            Custom glaze ordering is launching soon. Join the waitlist to be
-            the first to know when you can order your perfect glaze.
+            You&apos;ll soon be able to order the exact glaze color you&apos;ve been dreaming of.
+            Sign up and be the first to know.
           </p>
         </div>
 
@@ -173,16 +173,16 @@ export default function WaitlistPage() {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
-              title: 'Color Match',
-              desc: 'Pick any color and get a precise stain recipe matched to your glaze.',
+              title: 'Your Color, Your Way',
+              desc: 'Dream up any color — we\'ll turn it into a real glaze recipe made just for your work.',
             },
             {
-              title: 'Visual Preview',
-              desc: 'See how your glaze looks on ceramic before ordering.',
+              title: 'See It Before You Fire',
+              desc: 'Preview your glaze on a test tile so you can feel confident before you commit.',
             },
             {
-              title: 'Ships Ready',
-              desc: 'Receive a pre-mixed glaze batch ready to use in your studio.',
+              title: 'Made for Makers',
+              desc: 'Every batch is crafted to order by ceramicists who understand your craft.',
             },
           ].map((item) => (
             <div key={item.title} className="card text-center">

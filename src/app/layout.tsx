@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Ware — Design Your Perfect Glaze',
-  description: 'Create custom ceramic glazes matched to your exact color vision',
+  description: 'Pick any color and get a custom ceramic glaze crafted for your work',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -71,7 +71,7 @@ export default function RootLayout({
                 <div>
                   <img src="/logo-white.png" alt="Ware" className="h-8 w-auto mb-4" />
                   <p className="text-sm text-clay-300">
-                    Custom ceramic glazes designed for your unique vision.
+                    Your color. Your glaze. Your craft.
                   </p>
                 </div>
                 <div>
