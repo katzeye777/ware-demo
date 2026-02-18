@@ -88,25 +88,14 @@ function HeroBreathingImage() {
   }, [todaysImages]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-      {/*
-        Cropped tile — rounded container clips the image.
-        The image is scaled up ~1.9x so only the glaze oval is visible,
-        positioned slightly above center to avoid the white stand.
-        No tint — full color on the purple field.
-      */}
-      <div
-        className="w-56 h-56 md:w-80 md:h-80 rounded-full overflow-hidden hero-breathe shadow-2xl"
-        style={{ opacity: visible ? 0.9 : 0 }}
-      >
-        <img
-          src={todaysImages[activeIndex]}
-          alt=""
-          className="w-full h-full object-cover"
-          style={{ transform: 'scale(1.9)', objectPosition: 'center 42%' }}
-          loading="eager"
-        />
-      </div>
+    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      <img
+        src={todaysImages[activeIndex]}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover hero-breathe"
+        style={{ opacity: visible ? 0.85 : 0 }}
+        loading="eager"
+      />
     </div>
   );
 }
