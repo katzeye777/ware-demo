@@ -67,7 +67,7 @@ export default function FiringSelector({
         >
           {CONE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value} disabled={!opt.available}>
-              {opt.label} ({opt.tempF} / {opt.tempC}){!opt.available ? ' — Coming Soon' : ''}
+              {opt.label} ({opt.tempF} / {opt.tempC})
             </option>
           ))}
         </select>
