@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, RotateCcw, Thermometer, Layers, ZoomIn } from 'lucide-react';
 import TweakPathSelector from './components/TweakPathSelector';
 import TemperaturePath from './components/TemperaturePath';
 import TexturePath from './components/TexturePath';
 import CrazingPath from './components/CrazingPath';
-import TweakResultPanel from './components/TweakResultPanel';
 import type { TweakPath } from '@/lib/tweak-engine';
 import type { GlazeModification } from '@/lib/tweak-engine';
 
@@ -42,6 +41,7 @@ const PATH_LABELS: Record<TweakPath, string> = {
 };
 
 function TweakPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Read query params
@@ -168,10 +168,15 @@ function TweakPageContent() {
             />
           )}
 
-          {/* Modification result */}
+          {/* Temporary report button — real recommendations coming later */}
           {modification && (
             <div id="tweak-result">
-              <TweakResultPanel modification={modification} />
+              <button
+                onClick={() => router.push(`/design/report?color=${encodeURIComponent(colorHex)}`)}
+                className="w-full mt-3 border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Generate Report</span>
+              </button>
             </div>
           )}
         </div>
