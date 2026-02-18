@@ -583,7 +583,7 @@ export default function LibraryGlazeDetailPage() {
           {/* Tweak This Glaze */}
           <div className="mb-6">
             <Link
-              href={`/design?color=${encodeURIComponent(glaze.color_hex)}`}
+              href={`/design/tweak?glazeId=${encodeURIComponent(glaze.id)}&color=${encodeURIComponent(glaze.color_hex)}&finish=${encodeURIComponent(glaze.finish)}`}
               className="w-full btn-primary flex items-center justify-center space-x-2 py-3"
             >
               <Palette className="w-5 h-5" />
