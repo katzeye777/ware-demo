@@ -18,8 +18,10 @@ import {
   Upload,
   X,
   Image as ImageIcon,
+  FileDown,
 } from 'lucide-react';
 import Link from 'next/link';
+import { parseRecipeFromFilename, buildSdsIngredients } from '@/lib/sds-recipe';
 
 const PRICE_PER_PINT = 15.0;
 const PINT_GRAMS = 350;
@@ -82,6 +84,8 @@ export default function LibraryGlazeDetailPage() {
   const [batchSize, setBatchSize] = useState(350);
   const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [sdsGenerating, setSdsGenerating] = useState(false);
+  const [sdsError, setSdsError] = useState('');
 
   // Personal rating + review (localStorage-backed)
   const [personalRating, setPersonalRating] = useState(0);
@@ -242,6 +246,56 @@ export default function LibraryGlazeDetailPage() {
     });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const handleDownloadSDS = async () => {
+    if (!glaze || !glaze.preview_image_url) return;
+
+    const stains = parseRecipeFromFilename(glaze.preview_image_url);
+    if (!stains) {
+      setSdsError('Could not determine recipe for this glaze.');
+      return;
+    }
+
+    setSdsGenerating(true);
+    setSdsError('');
+
+    try {
+      const ingredients = buildSdsIngredients(stains, batchSize);
+
+      const response = await fetch('/api/sds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_name: glaze.name,
+          batch_number: glaze.id.replace('vb-', '').substring(0, 8),
+          ingredients,
+          form: glazeFormat === 'wet' ? 'liquid' : 'dry',
+          batch_size_grams: batchSize,
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'SDS generation failed');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeName = glaze.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+      a.href = url;
+      a.download = `CMW_SDS_${safeName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('SDS generation error:', err);
+      setSdsError(err.message || 'Failed to generate SDS');
+    } finally {
+      setSdsGenerating(false);
+    }
   };
 
   if (!glaze) {
@@ -657,6 +711,33 @@ export default function LibraryGlazeDetailPage() {
               <ShoppingCart className="w-5 h-5" />
               <span>{addedToCart ? 'Added!' : 'Add to Cart'}</span>
             </button>
+          </div>
+
+          {/* Safety Data Sheet */}
+          <div className="mb-6">
+            <button
+              onClick={handleDownloadSDS}
+              disabled={sdsGenerating || !glaze.preview_image_url}
+              className="w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-medium border-2 border-clay-300 text-clay-700 hover:border-brand-400 hover:text-brand-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {sdsGenerating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Generating SDS...</span>
+                </>
+              ) : (
+                <>
+                  <FileDown className="w-5 h-5" />
+                  <span>Download Safety Data Sheet</span>
+                </>
+              )}
+            </button>
+            {sdsError && (
+              <p className="text-xs text-red-600 mt-2 text-center">{sdsError}</p>
+            )}
+            <p className="text-xs text-clay-500 mt-2 text-center">
+              GHS-compliant SDS for this glaze
+            </p>
           </div>
 
           {/* Application Tips */}
