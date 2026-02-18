@@ -1,12 +1,54 @@
 import Link from 'next/link';
 import { Palette, Sparkles, Shield, Truck, Star, ArrowRight } from 'lucide-react';
 
+/* Curated test tile images for hero marquee — selected for color diversity */
+const MARQUEE_ROW_1 = [
+  '/vision-board/6450_3.75_6026_1.25_6_ox_2.JPG',   // Tangerine Flame (orange)
+  '/vision-board/6388_1_6026_0.5_6_ox_2.JPG',        // Midnight Ink (deep blue)
+  '/vision-board/6450_7.5_6388_0.3_6_ox_2.JPG',      // Moss Floor (green)
+  '/vision-board/6026_2.5_6388_0.7_6_ox_2.JPG',      // Eggplant Velvet (purple)
+  '/vision-board/6450_7.5_6026_0.25_6_ox_2.JPG',     // Canyon Gold (gold)
+  '/vision-board/6026_2.5_6450_0.0_6_ox_2.JPG',      // Lobster Red (red)
+  '/vision-board/6450_3.75_6388_0.4_6_ox_2.JPG',     // Tidal Slate (teal)
+];
+
+const MARQUEE_ROW_2 = [
+  '/vision-board/6026_1.25_6388_0.15_6_ox_2.JPG',    // Wisteria Field (mauve)
+  '/vision-board/6450_7.5_6388_0.7_6_ox_2.JPG',      // River Jade (green)
+  '/vision-board/6026_2.5_6600_1.4_6_ox_2.JPG',      // Espresso (brown)
+  '/vision-board/6388_1_6450_1.5_6_ox_2.JPG',        // Electric Cobalt (cobalt)
+  '/vision-board/6450_3.75_6026_0.125_6_ox_2.JPG',   // Honey Amber (amber)
+  '/vision-board/6026_1.25_6388_0.05_6_ox_2.JPG',    // Old Mauve (pink-brown)
+  '/vision-board/6450_7.5_6600_0.2_6_ox_2.JPG',      // Golden Olive (yellow-green)
+];
+
 export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white py-20 md:py-32">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white py-20 md:py-32 overflow-hidden">
+        {/* Scrolling tile marquee — background layer */}
+        <div className="absolute inset-0 flex flex-col justify-center gap-3 md:gap-4 opacity-[0.18] pointer-events-none" aria-hidden="true">
+          {/* Row 1 — scrolls left */}
+          <div className="flex w-max animate-marquee">
+            {[...MARQUEE_ROW_1, ...MARQUEE_ROW_1].map((src, i) => (
+              <div key={`r1-${i}`} className="w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 mx-1.5 md:mx-2">
+                <img src={src} alt="" className="w-full h-full object-cover" loading="eager" />
+              </div>
+            ))}
+          </div>
+          {/* Row 2 — scrolls right */}
+          <div className="flex w-max animate-marquee-reverse">
+            {[...MARQUEE_ROW_2, ...MARQUEE_ROW_2].map((src, i) => (
+              <div key={`r2-${i}`} className="w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 mx-1.5 md:mx-2">
+                <img src={src} alt="" className="w-full h-full object-cover" loading="eager" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Hero content — foreground */}
+        <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto">
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-6">
               Custom Ceramic Glazes, Made to Order
@@ -68,10 +110,10 @@ export default function HomePage() {
                 <span className="text-2xl font-bold text-brand-600">2</span>
               </div>
               <h3 className="text-xl font-semibold text-clay-900 mb-3">
-                See Your Recipe
+                Design Your Glaze
               </h3>
               <p className="text-clay-600">
-                Your color is matched to a real glaze recipe built from thousands of fired test tiles
+                Dial in the temperature, texture, glossiness, and more — your glaze is crafted from thousands of real fired test results
               </p>
             </div>
 
