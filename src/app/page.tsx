@@ -119,13 +119,19 @@ export default function HomePage() {
               Custom Ceramic Glazes, Made to Order
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            <h1
+              className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+              style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 8px rgba(0,0,0,0.5)' }}
+            >
               Design Your
               <br />
               <span className="text-brand-100">Perfect Glaze</span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-brand-50 mb-10 max-w-2xl mx-auto">
+            <p
+              className="text-xl md:text-2xl text-brand-50 mb-10 max-w-2xl mx-auto"
+              style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 6px rgba(0,0,0,0.4)' }}
+            >
               Imagine a color. Any color. Now imagine it on your next piece — that's where this starts.
             </p>
 
