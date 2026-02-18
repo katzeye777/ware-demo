@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useCartStore } from '@/lib/store';
 import { VISION_BOARD_GLAZES } from '@/app/vision-board/data';
@@ -14,6 +14,10 @@ import {
   Loader2,
   Save,
   Check,
+  Camera,
+  Upload,
+  X,
+  Image as ImageIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,6 +39,32 @@ function calculatePrice(grams: number, isWet: boolean = false): string {
   const base = (grams / PINT_GRAMS) * PRICE_PER_PINT;
   const total = isWet ? base * WET_SURCHARGE : base;
   return total.toFixed(2);
+}
+
+/** Resize an image data URL to max 800px wide, JPEG quality 0.7 */
+function resizeImage(dataUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const maxW = 800;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxW) {
+        h = Math.round(h * (maxW / w));
+        w = maxW;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d')!;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => resolve(dataUrl); // fallback to original
+    img.src = dataUrl;
+  });
 }
 
 export default function LibraryGlazeDetailPage() {
@@ -91,6 +121,59 @@ export default function LibraryGlazeDetailPage() {
     // Click same star to clear
     setPersonalRating(star === personalRating ? 0 : star);
   };
+
+  // User photos (localStorage-backed)
+  const [userPhotos, setUserPhotos] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Load user photos from localStorage on mount
+  useEffect(() => {
+    if (!glazeId) return;
+    try {
+      const stored = localStorage.getItem(`ware_photos_${glazeId}`);
+      if (stored) setUserPhotos(JSON.parse(stored));
+    } catch {
+      // Ignore
+    }
+  }, [glazeId]);
+
+  const savePhotos = useCallback(
+    (photos: string[]) => {
+      setUserPhotos(photos);
+      try {
+        localStorage.setItem(`ware_photos_${glazeId}`, JSON.stringify(photos));
+      } catch {
+        // localStorage full
+      }
+    },
+    [glazeId]
+  );
+
+  const handlePhotoUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        const resized = await resizeImage(dataUrl);
+        savePhotos([...userPhotos, resized]);
+      };
+      reader.readAsDataURL(file);
+      // Reset input so the same file can be selected again
+      e.target.value = '';
+    },
+    [userPhotos, savePhotos]
+  );
+
+  const handleDeletePhoto = useCallback(
+    (index: number) => {
+      const updated = userPhotos.filter((_, i) => i !== index);
+      savePhotos(updated);
+    },
+    [userPhotos, savePhotos]
+  );
 
   // Gallery state
   const [galleryImages, setGalleryImages] = useState<(string | null)[]>([
@@ -281,6 +364,95 @@ export default function LibraryGlazeDetailPage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Your Photos */}
+            <div className="card">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium text-clay-700">
+                  Your Photos
+                </h4>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xs text-brand-600 hover:text-brand-700 font-medium flex items-center space-x-1"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>Upload</span>
+                  </button>
+                  <button
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="text-xs text-brand-600 hover:text-brand-700 font-medium flex items-center space-x-1"
+                  >
+                    <Camera className="w-3 h-3" />
+                    <span>Camera</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Hidden file inputs */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+
+              {userPhotos.length === 0 ? (
+                /* Empty state */
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-8 border-2 border-dashed border-clay-200 rounded-lg flex flex-col items-center justify-center hover:border-brand-300 hover:bg-brand-50/30 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2 text-clay-400 mb-2">
+                    <Camera className="w-5 h-5" />
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs text-clay-400 font-medium">
+                    Add photos of your pieces
+                  </p>
+                </button>
+              ) : (
+                /* Photo grid */
+                <div className="grid grid-cols-3 gap-2">
+                  {userPhotos.map((photo, i) => (
+                    <div key={i} className="relative group">
+                      <div className="aspect-square rounded-lg overflow-hidden border border-clay-200">
+                        <img
+                          src={photo}
+                          alt={`Your photo ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        onClick={() => handleDeletePhoto(i)}
+                        className="absolute top-1 right-1 w-5 h-5 bg-clay-900/70 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {/* Add more slot */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square rounded-lg border-2 border-dashed border-clay-200 flex flex-col items-center justify-center hover:border-brand-300 hover:bg-brand-50/30 transition-colors cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4 text-clay-300 mb-0.5" />
+                    <span className="text-[10px] text-clay-400 font-medium">
+                      Add
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Favorite + Share */}
