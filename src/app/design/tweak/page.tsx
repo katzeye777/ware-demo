@@ -216,10 +216,10 @@ function TweakPageContent() {
       <div className="border-t border-clay-200 pt-12">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-clay-900 mb-2">
-            Having an issue?
+            Something not right?
           </h2>
           <p className="text-clay-600">
-            If something&apos;s not right with your glaze, walk through a guided diagnostic below.
+            Let&apos;s talk about what&apos;s going on and see if we can get you a new version that fixes your problems and works better for you.
           </p>
         </div>
 
