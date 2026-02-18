@@ -88,7 +88,7 @@ function HeroBreathingImage() {
   }, [todaysImages]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+    <div className="absolute inset-0 flex items-start justify-center pointer-events-none" aria-hidden="true">
       <div
         className="h-full aspect-square rounded-full overflow-hidden hero-breathe"
         style={{ opacity: visible ? 0.9 : 0 }}
