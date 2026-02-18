@@ -12,10 +12,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import ColorPicker from '../components/ColorPicker';
-import FinishSelector from '../components/FinishSelector';
-import ApplicationSelector from '../components/ApplicationSelector';
-import FiringSelector from '../components/FiringSelector';
-import BatchSizeSelector from '../components/BatchSizeSelector';
 import ResultsPanel from '../components/ResultsPanel';
 import TweakPathSelector from './components/TweakPathSelector';
 import TemperaturePath from './components/TemperaturePath';
@@ -62,18 +58,9 @@ function TweakPageContent() {
   // Read query params for pre-fill
   const initialColor = searchParams.get('color') || '#e4533d';
   const glazeId = searchParams.get('glazeId') || undefined;
-  const initialFinish = searchParams.get('finish') || 'glossy';
 
-  // ── Color selection state (same as design page) ──
+  // ── Color state ──
   const [color, setColor] = useState(initialColor);
-  const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>(
-    (initialFinish as 'glossy' | 'matte' | 'satin') || 'glossy'
-  );
-  const [application, setApplication] = useState<'dip' | 'brush' | 'spray'>('dip');
-  const [cone, setCone] = useState('6');
-  const [atmosphere, setAtmosphere] = useState('ox');
-  const [batchSize, setBatchSize] = useState(350);
-  const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [designResult, setDesignResult] = useState<GlazeDesignResponse | null>(null);
@@ -98,14 +85,13 @@ function TweakPageContent() {
     setIsLoading(true);
 
     try {
-      setFiringModel(Number(cone), atmosphere);
+      setFiringModel(6, 'ox');
 
       const result = await findGlaze({
         target_color_hex: color,
-        finish,
-        batch_size_grams: batchSize,
-        firing_temp_cone: cone,
-        format: glazeFormat,
+        finish: 'glossy',
+        batch_size_grams: 350,
+        firing_temp_cone: '6',
       });
 
       setDesignResult(result);
@@ -142,7 +128,7 @@ function TweakPageContent() {
   const PathIcon = selectedPath ? PATH_ICONS[selectedPath] : null;
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-7xl">
+    <div className="container mx-auto px-4 py-12 max-w-4xl">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -161,75 +147,51 @@ function TweakPageContent() {
       </div>
 
       {error && (
-        <div className="max-w-3xl mx-auto mb-8">
+        <div className="mb-8">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             {error}
           </div>
         </div>
       )}
 
-      {/* ── Color Selection (same layout as /design) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        {/* Left Column — Color Picker + Find Button */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="card">
-            <ColorPicker value={color} onChange={setColor} />
-          </div>
-
-          <button
-            onClick={handleFindGlaze}
-            disabled={isLoading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 py-5 text-xl font-semibold rounded-xl"
-          >
-            <Sparkles className="w-6 h-6" />
-            <span>{isLoading ? 'Finding Your Color...' : 'Find My Color'}</span>
-          </button>
-        </div>
-
-        {/* Right Column — Options */}
-        <div className="space-y-6">
-          {/* Selected Color Display */}
-          <div className="card">
-            <h3 className="text-sm font-medium text-clay-700 mb-3">
-              Selected Color
-            </h3>
-            <div
-              className="w-full h-32 rounded-lg color-swatch mb-3"
-              style={{ backgroundColor: color }}
-            />
-            <div className="text-center">
-              <p className="text-2xl font-mono font-bold text-clay-900">
-                {color.toUpperCase()}
-              </p>
+      {/* ── Color Adjustment ── */}
+      <div className="max-w-4xl mx-auto mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Color Picker */}
+          <div className="md:col-span-2">
+            <div className="card">
+              <ColorPicker value={color} onChange={setColor} />
             </div>
           </div>
 
-          <div className="card">
-            <FinishSelector value={finish} onChange={setFinish} />
-          </div>
-
-          <div className="card">
-            <ApplicationSelector value={application} onChange={setApplication} />
-          </div>
-
-          <div className="card">
-            <FiringSelector
-              cone={cone}
-              atmosphere={atmosphere}
-              onConeChange={setCone}
-              onAtmosphereChange={setAtmosphere}
-            />
-          </div>
-
-          <div className="card">
-            <BatchSizeSelector
-              value={batchSize}
-              onChange={setBatchSize}
-              format={glazeFormat}
-              onFormatChange={setGlazeFormat}
-            />
+          {/* Selected Color Display */}
+          <div>
+            <div className="card">
+              <h3 className="text-sm font-medium text-clay-700 mb-3">
+                Selected Color
+              </h3>
+              <div
+                className="w-full h-32 rounded-lg color-swatch mb-3"
+                style={{ backgroundColor: color }}
+              />
+              <div className="text-center">
+                <p className="text-2xl font-mono font-bold text-clay-900">
+                  {color.toUpperCase()}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Find My Color Button */}
+        <button
+          onClick={handleFindGlaze}
+          disabled={isLoading}
+          className="w-full mt-6 btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 py-5 text-xl font-semibold rounded-xl"
+        >
+          <Sparkles className="w-6 h-6" />
+          <span>{isLoading ? 'Finding Your Color...' : 'Find My Color'}</span>
+        </button>
       </div>
 
       {/* ── Results Section ── */}
@@ -241,20 +203,17 @@ function TweakPageContent() {
             onSelectMatch={setSelectedMatchId}
           />
 
-          {/* Generate Report — same dashed button as design page */}
-          <div className="max-w-3xl mx-auto mt-8">
-            <button
-              onClick={() => router.push(`/design/report?color=${encodeURIComponent(color)}`)}
-              className="w-full border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
-            >
-              <span>Generate Report</span>
-            </button>
-          </div>
+          <button
+            onClick={() => router.push(`/design/report?color=${encodeURIComponent(color)}`)}
+            className="w-full mt-8 border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+          >
+            <span>Generate Report</span>
+          </button>
         </div>
       )}
 
       {/* ── Troubleshooting Section ── */}
-      <div className="border-t border-clay-200 pt-12 max-w-4xl mx-auto">
+      <div className="border-t border-clay-200 pt-12">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-clay-900 mb-2">
             Having an issue?
