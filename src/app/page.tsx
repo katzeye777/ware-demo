@@ -50,7 +50,11 @@ function getTodaysImages(): string[] {
   return picked;
 }
 
-/** Breathing hero image — fades in, holds, fades out, cycles daily */
+/**
+ * Breathing hero image — a cropped test tile floats on the purple field.
+ * Fades in, holds, fades out, cycles. Daily image rotation.
+ * The image is cropped via CSS to show only the glaze surface (no black bg / white stand).
+ */
 function HeroBreathingImage() {
   const todaysImages = useMemo(() => getTodaysImages(), []);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -60,12 +64,10 @@ function HeroBreathingImage() {
     // Breathing cycle: 2s fade in → 4s hold → 2s fade out = 8s total
     const FADE_MS = 2000;
     const HOLD_MS = 4000;
-    const CYCLE_MS = FADE_MS + HOLD_MS + FADE_MS;
 
     let timeout: ReturnType<typeof setTimeout>;
 
     const breathe = () => {
-      // Fade in (happens via CSS transition when visible=true)
       setVisible(true);
 
       // After fade-in + hold, start fade-out
@@ -86,17 +88,25 @@ function HeroBreathingImage() {
   }, [todaysImages]);
 
   return (
-    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-      {/* The test tile image — fills the hero area */}
-      <img
-        src={todaysImages[activeIndex]}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover hero-breathe"
-        style={{ opacity: visible ? 0.22 : 0 }}
-        loading="eager"
-      />
-      {/* Gradient overlay to keep text readable */}
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-500/80 via-brand-600/70 to-brand-700/80" />
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+      {/*
+        Cropped tile — rounded container clips the image.
+        The image is scaled up ~1.9x so only the glaze oval is visible,
+        positioned slightly above center to avoid the white stand.
+        No tint — full color on the purple field.
+      */}
+      <div
+        className="w-48 h-48 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-full overflow-hidden hero-breathe"
+        style={{ opacity: visible ? 0.85 : 0 }}
+      >
+        <img
+          src={todaysImages[activeIndex]}
+          alt=""
+          className="w-full h-full object-cover"
+          style={{ transform: 'scale(1.9)', objectPosition: 'center 42%' }}
+          loading="eager"
+        />
+      </div>
     </div>
   );
 }
