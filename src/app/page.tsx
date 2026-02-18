@@ -96,7 +96,7 @@ function HeroBreathingImage() {
         No tint — full color on the purple field.
       */}
       <div
-        className="w-48 h-48 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-full overflow-hidden hero-breathe"
+        className="h-full aspect-square rounded-full overflow-hidden hero-breathe"
         style={{ opacity: visible ? 0.85 : 0 }}
       >
         <img
