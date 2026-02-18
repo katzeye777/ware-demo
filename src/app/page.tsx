@@ -88,14 +88,18 @@ function HeroBreathingImage() {
   }, [todaysImages]);
 
   return (
-    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-      <img
-        src={todaysImages[activeIndex]}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover hero-breathe"
-        style={{ opacity: visible ? 0.85 : 0 }}
-        loading="eager"
-      />
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+      <div
+        className="h-full aspect-square rounded-full overflow-hidden hero-breathe"
+        style={{ opacity: visible ? 0.9 : 0 }}
+      >
+        <img
+          src={todaysImages[activeIndex]}
+          alt=""
+          className="w-full h-full object-contain"
+          loading="eager"
+        />
+      </div>
     </div>
   );
 }
