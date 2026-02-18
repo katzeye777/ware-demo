@@ -1,8 +1,14 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Palette, Sparkles, Shield, Truck, Star, ArrowRight } from 'lucide-react';
 
-/* Curated test tile images for hero marquee — selected for color diversity */
-const MARQUEE_ROW_1 = [
+/**
+ * Full pool of curated test tile images — selected for color diversity.
+ * Each day, a subset is chosen based on the date so visitors see fresh images.
+ */
+const HERO_IMAGE_POOL = [
   '/vision-board/6450_3.75_6026_1.25_6_ox_2.JPG',   // Tangerine Flame (orange)
   '/vision-board/6388_1_6026_0.5_6_ox_2.JPG',        // Midnight Ink (deep blue)
   '/vision-board/6450_7.5_6388_0.3_6_ox_2.JPG',      // Moss Floor (green)
@@ -10,9 +16,6 @@ const MARQUEE_ROW_1 = [
   '/vision-board/6450_7.5_6026_0.25_6_ox_2.JPG',     // Canyon Gold (gold)
   '/vision-board/6026_2.5_6450_0.0_6_ox_2.JPG',      // Lobster Red (red)
   '/vision-board/6450_3.75_6388_0.4_6_ox_2.JPG',     // Tidal Slate (teal)
-];
-
-const MARQUEE_ROW_2 = [
   '/vision-board/6026_1.25_6388_0.15_6_ox_2.JPG',    // Wisteria Field (mauve)
   '/vision-board/6450_7.5_6388_0.7_6_ox_2.JPG',      // River Jade (green)
   '/vision-board/6026_2.5_6600_1.4_6_ox_2.JPG',      // Espresso (brown)
@@ -20,32 +23,91 @@ const MARQUEE_ROW_2 = [
   '/vision-board/6450_3.75_6026_0.125_6_ox_2.JPG',   // Honey Amber (amber)
   '/vision-board/6026_1.25_6388_0.05_6_ox_2.JPG',    // Old Mauve (pink-brown)
   '/vision-board/6450_7.5_6600_0.2_6_ox_2.JPG',      // Golden Olive (yellow-green)
+  '/vision-board/6450_7.5_6026_2.25_6_ox_2.JPG',     // Burnt Ember (burnt orange)
+  '/vision-board/6388_1_6026_1.5_6_ox_2.JPG',        // Ink Wash (indigo)
+  '/vision-board/6450_3.75_6388_0.2_6_ox_2.JPG',     // Lichen Stone (sage)
+  '/vision-board/6026_2.5_6600_0.8_6_ox_2.JPG',      // Dark Cocoa (chocolate)
+  '/vision-board/6026_0.875_6388_0.5_6_ox_2.JPG',    // Twilight Blue (blue-violet)
+  '/vision-board/6450_3.75_6026_0.5_6_ox_2.JPG',     // Golden Peach (peach)
+  '/vision-board/6026_2.5_6388_0.1_6_ox_2.JPG',      // Brick Dust (rust)
 ];
+
+/** Pick 6 images for today using day-of-year as seed */
+function getTodaysImages(): string[] {
+  const daysSinceEpoch = Math.floor(Date.now() / 86_400_000);
+  const pool = [...HERO_IMAGE_POOL];
+  const picked: string[] = [];
+
+  // Simple seeded shuffle — pick 6
+  let seed = daysSinceEpoch;
+  for (let i = 0; i < 6 && pool.length > 0; i++) {
+    seed = (seed * 16807 + 1) % 2147483647; // LCG
+    const idx = seed % pool.length;
+    picked.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+
+  return picked;
+}
+
+/** Breathing hero image — fades in, holds, fades out, cycles daily */
+function HeroBreathingImage() {
+  const todaysImages = useMemo(() => getTodaysImages(), []);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    // Breathing cycle: 2s fade in → 4s hold → 2s fade out = 8s total
+    const FADE_MS = 2000;
+    const HOLD_MS = 4000;
+    const CYCLE_MS = FADE_MS + HOLD_MS + FADE_MS;
+
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const breathe = () => {
+      // Fade in (happens via CSS transition when visible=true)
+      setVisible(true);
+
+      // After fade-in + hold, start fade-out
+      timeout = setTimeout(() => {
+        setVisible(false);
+
+        // After fade-out, advance to next image and start again
+        timeout = setTimeout(() => {
+          setActiveIndex((prev) => (prev + 1) % todaysImages.length);
+          breathe();
+        }, FADE_MS);
+      }, FADE_MS + HOLD_MS);
+    };
+
+    breathe();
+
+    return () => clearTimeout(timeout);
+  }, [todaysImages]);
+
+  return (
+    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      {/* The test tile image — fills the hero area */}
+      <img
+        src={todaysImages[activeIndex]}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover hero-breathe"
+        style={{ opacity: visible ? 0.22 : 0 }}
+        loading="eager"
+      />
+      {/* Gradient overlay to keep text readable */}
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-500/80 via-brand-600/70 to-brand-700/80" />
+    </div>
+  );
+}
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white py-20 md:py-32 overflow-hidden">
-        {/* Scrolling tile marquee — background layer */}
-        <div className="absolute inset-0 flex flex-col justify-center gap-3 md:gap-4 opacity-[0.18] pointer-events-none" aria-hidden="true">
-          {/* Row 1 — scrolls left */}
-          <div className="flex w-max animate-marquee">
-            {[...MARQUEE_ROW_1, ...MARQUEE_ROW_1].map((src, i) => (
-              <div key={`r1-${i}`} className="w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 mx-1.5 md:mx-2">
-                <img src={src} alt="" className="w-full h-full object-cover" loading="eager" />
-              </div>
-            ))}
-          </div>
-          {/* Row 2 — scrolls right */}
-          <div className="flex w-max animate-marquee-reverse">
-            {[...MARQUEE_ROW_2, ...MARQUEE_ROW_2].map((src, i) => (
-              <div key={`r2-${i}`} className="w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 mx-1.5 md:mx-2">
-                <img src={src} alt="" className="w-full h-full object-cover" loading="eager" />
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Breathing background image */}
+        <HeroBreathingImage />
 
         {/* Hero content — foreground */}
         <div className="relative z-10 container mx-auto px-4 text-center">
