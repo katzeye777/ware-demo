@@ -1,13 +1,28 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, RotateCcw, Thermometer, Layers, ZoomIn } from 'lucide-react';
+import {
+  ArrowLeft,
+  RotateCcw,
+  Thermometer,
+  Layers,
+  ZoomIn,
+  Sparkles,
+} from 'lucide-react';
+import ColorPicker from '../components/ColorPicker';
+import FinishSelector from '../components/FinishSelector';
+import ApplicationSelector from '../components/ApplicationSelector';
+import FiringSelector from '../components/FiringSelector';
+import BatchSizeSelector from '../components/BatchSizeSelector';
+import ResultsPanel from '../components/ResultsPanel';
 import TweakPathSelector from './components/TweakPathSelector';
 import TemperaturePath from './components/TemperaturePath';
 import TexturePath from './components/TexturePath';
 import CrazingPath from './components/CrazingPath';
+import { findGlaze, setFiringModel } from '@/lib/demo-api';
+import type { GlazeDesignResponse } from '@/lib/api';
 import type { TweakPath } from '@/lib/tweak-engine';
 import type { GlazeModification } from '@/lib/tweak-engine';
 
@@ -44,14 +59,70 @@ function TweakPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Read query params
-  const colorHex = searchParams.get('color') || '#e4533d';
+  // Read query params for pre-fill
+  const initialColor = searchParams.get('color') || '#e4533d';
   const glazeId = searchParams.get('glazeId') || undefined;
-  const finish = searchParams.get('finish') || 'glossy';
+  const initialFinish = searchParams.get('finish') || 'glossy';
 
-  // Local state
+  // ── Color selection state (same as design page) ──
+  const [color, setColor] = useState(initialColor);
+  const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>(
+    (initialFinish as 'glossy' | 'matte' | 'satin') || 'glossy'
+  );
+  const [application, setApplication] = useState<'dip' | 'brush' | 'spray'>('dip');
+  const [cone, setCone] = useState('6');
+  const [atmosphere, setAtmosphere] = useState('ox');
+  const [batchSize, setBatchSize] = useState(350);
+  const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [designResult, setDesignResult] = useState<GlazeDesignResponse | null>(null);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+
+  // ── Tweak diagnostic state ──
   const [selectedPath, setSelectedPath] = useState<TweakPath | null>(null);
   const [modification, setModification] = useState<GlazeModification | null>(null);
+
+  // Pre-fill color from query param
+  useEffect(() => {
+    const colorParam = searchParams.get('color');
+    if (colorParam && /^#[0-9A-Fa-f]{6}$/.test(colorParam)) {
+      setColor(colorParam);
+    }
+  }, [searchParams]);
+
+  // ── Handlers ──
+
+  const handleFindGlaze = async () => {
+    setError('');
+    setIsLoading(true);
+
+    try {
+      setFiringModel(Number(cone), atmosphere);
+
+      const result = await findGlaze({
+        target_color_hex: color,
+        finish,
+        batch_size_grams: batchSize,
+        firing_temp_cone: cone,
+        format: glazeFormat,
+      });
+
+      setDesignResult(result);
+      setSelectedMatchId(result.primary_match.glaze_id);
+
+      setTimeout(() => {
+        document.getElementById('results-section')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+    } catch (err: any) {
+      setError(err.message || 'Failed to find glaze match');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleStartOver = () => {
     setSelectedPath(null);
@@ -60,7 +131,6 @@ function TweakPageContent() {
 
   const handleModification = (mod: GlazeModification) => {
     setModification(mod);
-    // Scroll to result
     setTimeout(() => {
       document.getElementById('tweak-result')?.scrollIntoView({
         behavior: 'smooth',
@@ -72,7 +142,7 @@ function TweakPageContent() {
   const PathIcon = selectedPath ? PATH_ICONS[selectedPath] : null;
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 py-12 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -86,101 +156,183 @@ function TweakPageContent() {
           Tweak Your Glaze
         </h1>
         <p className="text-clay-600">
-          Walk through a guided diagnostic to find what's going on — and how to fix it.
+          Adjust the color, fix glossiness, or work on alleviating crazing
         </p>
       </div>
 
-      {/* Original glaze card */}
-      <div className="card mb-8 flex items-center space-x-4">
-        <div
-          className="w-16 h-16 rounded-lg color-swatch border border-clay-200 flex-shrink-0"
-          style={{ backgroundColor: colorHex }}
-        />
-        <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-clay-900">Original Glaze</h2>
-          <div className="flex items-center space-x-3 text-sm text-clay-500">
-            <span className="font-mono">{colorHex.toUpperCase()}</span>
-            <span>&bull;</span>
-            <span className="capitalize">{finish}</span>
-            {glazeId && (
-              <>
-                <span>&bull;</span>
-                <span className="truncate">{glazeId}</span>
-              </>
-            )}
+      {error && (
+        <div className="max-w-3xl mx-auto mb-8">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        </div>
+      )}
+
+      {/* ── Color Selection (same layout as /design) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        {/* Left Column — Color Picker + Find Button */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="card">
+            <ColorPicker value={color} onChange={setColor} />
+          </div>
+
+          <button
+            onClick={handleFindGlaze}
+            disabled={isLoading}
+            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 py-5 text-xl font-semibold rounded-xl"
+          >
+            <Sparkles className="w-6 h-6" />
+            <span>{isLoading ? 'Finding Your Color...' : 'Find My Color'}</span>
+          </button>
+        </div>
+
+        {/* Right Column — Options */}
+        <div className="space-y-6">
+          {/* Selected Color Display */}
+          <div className="card">
+            <h3 className="text-sm font-medium text-clay-700 mb-3">
+              Selected Color
+            </h3>
+            <div
+              className="w-full h-32 rounded-lg color-swatch mb-3"
+              style={{ backgroundColor: color }}
+            />
+            <div className="text-center">
+              <p className="text-2xl font-mono font-bold text-clay-900">
+                {color.toUpperCase()}
+              </p>
+            </div>
+          </div>
+
+          <div className="card">
+            <FinishSelector value={finish} onChange={setFinish} />
+          </div>
+
+          <div className="card">
+            <ApplicationSelector value={application} onChange={setApplication} />
+          </div>
+
+          <div className="card">
+            <FiringSelector
+              cone={cone}
+              atmosphere={atmosphere}
+              onConeChange={setCone}
+              onAtmosphereChange={setAtmosphere}
+            />
+          </div>
+
+          <div className="card">
+            <BatchSizeSelector
+              value={batchSize}
+              onChange={setBatchSize}
+              format={glazeFormat}
+              onFormatChange={setGlazeFormat}
+            />
           </div>
         </div>
       </div>
 
-      {/* Path selector or active path */}
-      {!selectedPath ? (
-        <TweakPathSelector onSelect={setSelectedPath} />
-      ) : (
-        <div className="space-y-6">
-          {/* Path header with start over */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {PathIcon && (
-                <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center">
-                  <PathIcon className="w-5 h-5 text-brand-600" />
-                </div>
-              )}
-              <div>
-                <h2 className="text-xl font-semibold text-clay-900">
-                  {PATH_LABELS[selectedPath]} Diagnosis
-                </h2>
-                <p className="text-sm text-clay-500">
-                  {selectedPath === 'temperature' && 'Let\'s figure out why your glaze is running.'}
-                  {selectedPath === 'texture' && 'Let\'s get your surface where you want it.'}
-                  {selectedPath === 'crazing' && 'Let\'s diagnose the crazing and find a fix.'}
-                </p>
-              </div>
-            </div>
+      {/* ── Results Section ── */}
+      {designResult && (
+        <div id="results-section" className="border-t border-clay-200 pt-12 mb-12">
+          <ResultsPanel
+            result={designResult}
+            selectedMatchId={selectedMatchId}
+            onSelectMatch={setSelectedMatchId}
+          />
+
+          {/* Generate Report — same dashed button as design page */}
+          <div className="max-w-3xl mx-auto mt-8">
             <button
-              onClick={handleStartOver}
-              className="btn-secondary flex items-center space-x-2 text-sm"
+              onClick={() => router.push(`/design/report?color=${encodeURIComponent(color)}`)}
+              className="w-full border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
-              <RotateCcw className="w-4 h-4" />
-              <span>Start Over</span>
+              <span>Generate Report</span>
             </button>
           </div>
-
-          {/* Active path wizard */}
-          {selectedPath === 'temperature' && (
-            <TemperaturePath
-              originalColorHex={colorHex}
-              originalGlazeId={glazeId}
-              onModification={handleModification}
-            />
-          )}
-          {selectedPath === 'texture' && (
-            <TexturePath
-              originalColorHex={colorHex}
-              originalGlazeId={glazeId}
-              onModification={handleModification}
-            />
-          )}
-          {selectedPath === 'crazing' && (
-            <CrazingPath
-              originalColorHex={colorHex}
-              originalGlazeId={glazeId}
-              onModification={handleModification}
-            />
-          )}
-
-          {/* Temporary report button — real recommendations coming later */}
-          {modification && (
-            <div id="tweak-result">
-              <button
-                onClick={() => router.push(`/design/report?color=${encodeURIComponent(colorHex)}`)}
-                className="w-full mt-3 border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                <span>Generate Report</span>
-              </button>
-            </div>
-          )}
         </div>
       )}
+
+      {/* ── Troubleshooting Section ── */}
+      <div className="border-t border-clay-200 pt-12 max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-clay-900 mb-2">
+            Having an issue?
+          </h2>
+          <p className="text-clay-600">
+            If something&apos;s not right with your glaze, walk through a guided diagnostic below.
+          </p>
+        </div>
+
+        {!selectedPath ? (
+          <TweakPathSelector onSelect={setSelectedPath} />
+        ) : (
+          <div className="space-y-6">
+            {/* Path header with start over */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {PathIcon && (
+                  <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center">
+                    <PathIcon className="w-5 h-5 text-brand-600" />
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-xl font-semibold text-clay-900">
+                    {PATH_LABELS[selectedPath]} Diagnosis
+                  </h2>
+                  <p className="text-sm text-clay-500">
+                    {selectedPath === 'temperature' && 'Let\'s figure out why your glaze is running.'}
+                    {selectedPath === 'texture' && 'Let\'s get your surface where you want it.'}
+                    {selectedPath === 'crazing' && 'Let\'s diagnose the crazing and find a fix.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleStartOver}
+                className="btn-secondary flex items-center space-x-2 text-sm"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Start Over</span>
+              </button>
+            </div>
+
+            {/* Active path wizard */}
+            {selectedPath === 'temperature' && (
+              <TemperaturePath
+                originalColorHex={color}
+                originalGlazeId={glazeId}
+                onModification={handleModification}
+              />
+            )}
+            {selectedPath === 'texture' && (
+              <TexturePath
+                originalColorHex={color}
+                originalGlazeId={glazeId}
+                onModification={handleModification}
+              />
+            )}
+            {selectedPath === 'crazing' && (
+              <CrazingPath
+                originalColorHex={color}
+                originalGlazeId={glazeId}
+                onModification={handleModification}
+              />
+            )}
+
+            {/* Temporary report button — real recommendations coming later */}
+            {modification && (
+              <div id="tweak-result">
+                <button
+                  onClick={() => router.push(`/design/report?color=${encodeURIComponent(color)}`)}
+                  className="w-full mt-3 border-2 border-dashed border-clay-300 text-clay-500 hover:border-brand-400 hover:text-brand-600 font-medium py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                >
+                  <span>Generate Report</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
