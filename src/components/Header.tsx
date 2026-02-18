@@ -3,13 +3,15 @@
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Palette } from 'lucide-react';
+import { Menu, X, Palette, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
+import { useCartStore } from '@/lib/store';
 
 export default function Header() {
   const { user, isDemoMode } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const cartItems = useCartStore((s) => s.items);
 
   const navLinks = [
     { href: '/design', label: 'Design' },
@@ -47,8 +49,16 @@ export default function Header() {
             ))}
           </div>
 
-          {/* CTA Button - Desktop */}
+          {/* Cart + CTA - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
+            <Link href="/cart" className="relative text-clay-700 hover:text-brand-600 transition-colors">
+              <ShoppingCart className="w-6 h-6" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-brand-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {cartItems.length}
+                </span>
+              )}
+            </Link>
             <Link href="/design" className="btn-primary text-sm">
               Start Designing
             </Link>
@@ -79,6 +89,14 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href="/cart"
+                className="font-medium text-clay-700 flex items-center space-x-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <ShoppingCart className="w-5 h-5" />
+                <span>Cart{cartItems.length > 0 ? ` (${cartItems.length})` : ''}</span>
+              </Link>
               <div className="border-t border-clay-200 pt-4">
                 <Link
                   href="/design"
