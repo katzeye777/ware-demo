@@ -19,6 +19,7 @@ import {
   X,
   Image as ImageIcon,
   FileDown,
+  Droplets,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -83,6 +84,7 @@ export default function LibraryGlazeDetailPage() {
   const [batchSize, setBatchSize] = useState(350);
   const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [waterPct, setWaterPct] = useState(80);
 
   // Personal rating + review (localStorage-backed)
   const [personalRating, setPersonalRating] = useState(0);
@@ -294,41 +296,21 @@ export default function LibraryGlazeDetailPage() {
               )}
             </div>
 
-            {/* Color Comparison — large swatch */}
+            {/* Color Reference */}
             <div className="card">
               <h4 className="text-sm font-medium text-clay-700 mb-3">
                 Color Reference
               </h4>
-              <div className="flex items-stretch gap-3">
-                {/* Software prediction — BIG */}
-                <div className="flex-1">
-                  <div
-                    className="w-full h-32 rounded-lg color-swatch border border-clay-200"
-                    style={{ backgroundColor: glaze.color_hex }}
-                  />
-                  <p className="text-xs text-clay-500 mt-2 text-center">
-                    Software prediction
-                  </p>
-                  <p className="text-sm font-mono font-bold text-clay-900 text-center">
-                    {glaze.color_hex.toUpperCase()}
-                  </p>
-                </div>
-                {/* Fired test tile thumbnail */}
-                {glaze.preview_image_url && (
-                  <div className="flex-1">
-                    <div className="w-full h-32 rounded-lg overflow-hidden border border-clay-200">
-                      <img
-                        src={glaze.preview_image_url}
-                        alt="Fired sample"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <p className="text-xs text-clay-500 mt-2 text-center">
-                      Fired test tile
-                    </p>
-                  </div>
-                )}
-              </div>
+              <div
+                className="w-full h-40 rounded-lg color-swatch border border-clay-200"
+                style={{ backgroundColor: glaze.color_hex }}
+              />
+              <p className="text-xs text-clay-500 mt-2 text-center">
+                Software prediction
+              </p>
+              <p className="text-sm font-mono font-bold text-clay-900 text-center">
+                {glaze.color_hex.toUpperCase()}
+              </p>
             </div>
 
             {/* Generated Gallery */}
@@ -673,6 +655,63 @@ export default function LibraryGlazeDetailPage() {
             <p className="text-xs text-clay-500 mt-2 text-center">
               GHS-compliant SDS for this glaze
             </p>
+          </div>
+
+          {/* Water Content Calculator */}
+          <div className="card mb-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Droplets className="w-5 h-5 text-blue-500" />
+              <h4 className="font-semibold text-clay-900">
+                Water Content Calculator
+              </h4>
+            </div>
+
+            {glazeFormat === 'wet' ? (
+              <p className="text-sm text-clay-600">
+                Pre-mixed glazes come ready to use — no water needed.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm text-clay-600">Water ratio</label>
+                  <span className="text-sm font-semibold text-brand-700">
+                    {waterPct}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={200}
+                  step={5}
+                  value={waterPct}
+                  onChange={(e) => setWaterPct(Number(e.target.value))}
+                  className="w-full h-2 bg-clay-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
+                />
+                <div className="flex justify-between text-xs text-clay-400 mt-1 mb-4">
+                  <span>0%</span>
+                  <span>100%</span>
+                  <span>200%</span>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-blue-800">
+                    Add{' '}
+                    <span className="font-bold text-blue-900">
+                      {Math.round((batchSize * waterPct) / 100)}g
+                    </span>{' '}
+                    of water to{' '}
+                    <span className="font-bold text-blue-900">
+                      {batchSize}g
+                    </span>{' '}
+                    dry powder
+                  </p>
+                </div>
+
+                <p className="text-xs text-clay-500 mt-3">
+                  Standard mixing ratio is 80%. Adjust for thicker or thinner application.
+                </p>
+              </>
+            )}
           </div>
 
           {/* Application Tips */}
