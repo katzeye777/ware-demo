@@ -480,107 +480,10 @@ export default function LibraryGlazeDetailPage() {
             </div>
           </div>
 
-          {/* Your Rating */}
-          <div className="card mb-6">
-            <h3 className="font-semibold text-clay-900 mb-3">Your Rating</h3>
-            <div className="flex items-center space-x-1 mb-4">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => handleStarClick(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="p-0.5 transition-transform hover:scale-110"
-                >
-                  <Star
-                    className={`w-7 h-7 cursor-pointer transition-colors ${
-                      star <= (hoverRating || personalRating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-clay-300 hover:text-yellow-300'
-                    }`}
-                  />
-                </button>
-              ))}
-              {personalRating > 0 && (
-                <span className="text-sm text-clay-500 ml-2">
-                  {personalRating}/5
-                </span>
-              )}
-            </div>
-            <textarea
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Add your notes about this glaze..."
-              rows={3}
-              className="w-full px-3 py-2 border border-clay-200 rounded-lg text-sm text-clay-900 placeholder:text-clay-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none mb-3"
-            />
-            <button
-              onClick={handleSaveReview}
-              disabled={personalRating === 0 && !reviewText.trim()}
-              className={`btn-secondary flex items-center justify-center space-x-2 w-full disabled:opacity-40 disabled:cursor-not-allowed transition-all ${
-                reviewSaved ? 'bg-green-50 border-green-500 text-green-700' : ''
-              }`}
-            >
-              {reviewSaved ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>Saved!</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Save Notes</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Specifications */}
-          <div className="card mb-6">
-            <h3 className="font-semibold text-clay-900 mb-4">Specifications</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-clay-600">Finish Type</span>
-                <span className="font-medium text-clay-900">
-                  {glaze.finish.charAt(0).toUpperCase() + glaze.finish.slice(1)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-clay-600">Color Code</span>
-                <span className="font-medium text-clay-900 font-mono">
-                  {glaze.color_hex.toUpperCase()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-clay-600">Firing Temperature</span>
-                <span className="font-medium text-clay-900">Cone 6</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-clay-600">Atmosphere</span>
-                <span className="font-medium text-clay-900">Oxidation</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tweak This Glaze */}
-          <div className="mb-6">
-            <Link
-              href={`/design/tweak?glazeId=${encodeURIComponent(glaze.id)}&color=${encodeURIComponent(glaze.color_hex)}&finish=${encodeURIComponent(glaze.finish)}`}
-              className="w-full btn-primary flex items-center justify-center space-x-2 py-3"
-            >
-              <Palette className="w-5 h-5" />
-              <span>Tweak This Glaze</span>
-            </Link>
-            <p className="text-xs text-clay-500 mt-2 text-center">
-              Adjust the color, fix glossiness, or work on alleviating crazing
-            </p>
-          </div>
-
-          {/* Batch Size Selector */}
+          {/* 1. Reorder */}
           <div className="card mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-clay-900">Order</h3>
+              <h3 className="font-semibold text-clay-900">Reorder</h3>
               <div className="text-right">
                 <div className="text-2xl font-bold text-brand-600">
                   ${calculatePrice(batchSize, glazeFormat === 'wet')}
@@ -642,22 +545,21 @@ export default function LibraryGlazeDetailPage() {
             </button>
           </div>
 
-          {/* Safety Data Sheet */}
+          {/* 2. Tweak This Glaze */}
           <div className="mb-6">
-            <a
-              href={`/sds/${glaze.id}.pdf`}
-              download
-              className="w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-medium border-2 border-clay-300 text-clay-700 hover:border-brand-400 hover:text-brand-600 transition-all"
+            <Link
+              href={`/design/tweak?glazeId=${encodeURIComponent(glaze.id)}&color=${encodeURIComponent(glaze.color_hex)}&finish=${encodeURIComponent(glaze.finish)}`}
+              className="w-full btn-primary flex items-center justify-center space-x-2 py-3"
             >
-              <FileDown className="w-5 h-5" />
-              <span>Download Safety Data Sheet</span>
-            </a>
+              <Palette className="w-5 h-5" />
+              <span>Tweak This Glaze</span>
+            </Link>
             <p className="text-xs text-clay-500 mt-2 text-center">
-              GHS-compliant SDS for this glaze
+              Adjust the color, fix glossiness, or work on alleviating crazing
             </p>
           </div>
 
-          {/* Water Content Calculator */}
+          {/* 3. Water Content Calculator */}
           <div className="card mb-6">
             <div className="flex items-center space-x-2 mb-4">
               <Droplets className="w-5 h-5 text-blue-500" />
@@ -714,7 +616,105 @@ export default function LibraryGlazeDetailPage() {
             )}
           </div>
 
-          {/* Application Tips */}
+          {/* 4. Your Rating */}
+          <div className="card mb-6">
+            <h3 className="font-semibold text-clay-900 mb-3">Your Rating</h3>
+            <div className="flex items-center space-x-1 mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => handleStarClick(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="p-0.5 transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`w-7 h-7 cursor-pointer transition-colors ${
+                      star <= (hoverRating || personalRating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-clay-300 hover:text-yellow-300'
+                    }`}
+                  />
+                </button>
+              ))}
+              {personalRating > 0 && (
+                <span className="text-sm text-clay-500 ml-2">
+                  {personalRating}/5
+                </span>
+              )}
+            </div>
+            <textarea
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              placeholder="Add your notes about this glaze..."
+              rows={3}
+              className="w-full px-3 py-2 border border-clay-200 rounded-lg text-sm text-clay-900 placeholder:text-clay-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none mb-3"
+            />
+            <button
+              onClick={handleSaveReview}
+              disabled={personalRating === 0 && !reviewText.trim()}
+              className={`btn-secondary flex items-center justify-center space-x-2 w-full disabled:opacity-40 disabled:cursor-not-allowed transition-all ${
+                reviewSaved ? 'bg-green-50 border-green-500 text-green-700' : ''
+              }`}
+            >
+              {reviewSaved ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Saved!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save Notes</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* 5. Specifications */}
+          <div className="card mb-6">
+            <h3 className="font-semibold text-clay-900 mb-4">Specifications</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-clay-600">Finish Type</span>
+                <span className="font-medium text-clay-900">
+                  {glaze.finish.charAt(0).toUpperCase() + glaze.finish.slice(1)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-clay-600">Color Code</span>
+                <span className="font-medium text-clay-900 font-mono">
+                  {glaze.color_hex.toUpperCase()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-clay-600">Firing Temperature</span>
+                <span className="font-medium text-clay-900">Cone 6</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-clay-600">Atmosphere</span>
+                <span className="font-medium text-clay-900">Oxidation</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 6. Safety Data Sheet */}
+          <div className="mb-6">
+            <a
+              href={`/sds/${glaze.id}.pdf`}
+              download
+              className="w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-medium border-2 border-clay-300 text-clay-700 hover:border-brand-400 hover:text-brand-600 transition-all"
+            >
+              <FileDown className="w-5 h-5" />
+              <span>Download Safety Data Sheet</span>
+            </a>
+            <p className="text-xs text-clay-500 mt-2 text-center">
+              GHS-compliant SDS for this glaze
+            </p>
+          </div>
+
+          {/* 7. Application Tips */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h4 className="font-semibold text-blue-900 mb-2">
               Application Tips
@@ -733,7 +733,7 @@ export default function LibraryGlazeDetailPage() {
             </ul>
           </div>
 
-          {/* Sizing Guide */}
+          {/* 8. Sizing Guide */}
           <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
             <h4 className="font-semibold text-clay-700 mb-2">Sizing Guide</h4>
             <ul className="text-xs space-y-1 text-clay-600">
