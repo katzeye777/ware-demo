@@ -43,6 +43,61 @@ export default function AboutPage() {
           </div>
         </div>
 
+        {/* Meet the Founders */}
+        <div className="card mb-8">
+          <h2 className="text-2xl font-bold text-clay-900 mb-6">
+            Meet the Founders
+          </h2>
+          <p className="text-clay-700 leading-relaxed mb-6">
+            Ware is built by Matt and Rose Katz, the founders of{' '}
+            <a
+              href="https://ceramicmaterialsworkshop.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-600 hover:text-brand-700 underline"
+            >
+              Ceramic Materials Workshop
+            </a>
+            . Between them they bring over 40 years of ceramic materials
+            experience &mdash; in the studio, in the lab, and in the
+            classroom.
+          </p>
+
+          <div className="space-y-6">
+            <div className="bg-clay-50 rounded-lg p-5">
+              <h3 className="font-bold text-clay-900 mb-2">Matt Katz</h3>
+              <p className="text-sm text-clay-700 leading-relaxed">
+                Matt is a working ceramic artist with a B.F.A. from Alfred
+                University and an M.F.A. from the University of
+                Colorado&ndash;Boulder. He spent over 20 years as a ceramic
+                engineer and researcher, including 15 years teaching ceramic
+                materials for artists at Alfred. He has a gift for making
+                ceramic science understandable for makers of all experience
+                levels &mdash; and that same approach drives everything at
+                Ware.
+              </p>
+            </div>
+
+            <div className="bg-clay-50 rounded-lg p-5">
+              <h3 className="font-bold text-clay-900 mb-2">Rose Katz</h3>
+              <p className="text-sm text-clay-700 leading-relaxed">
+                Rose is a clay and glaze engineer with a B.F.A. from Alfred
+                University and over 10 years in the tile industry before
+                CMW. She&rsquo;s also an independent artist and production
+                potter. Rose&rsquo;s combination of industry engineering and
+                hands-on maker experience is rare &mdash; and it&rsquo;s a
+                big part of why our formulations actually work in real
+                studios, not just on paper.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-sm text-clay-600 mt-5 leading-relaxed">
+            They work out of their studio in New England, where the test
+            tile library behind Ware continues to grow with every firing.
+          </p>
+        </div>
+
         {/* How It Works */}
         <div className="card mb-8">
           <h2 className="text-2xl font-bold text-clay-900 mb-6">
