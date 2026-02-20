@@ -85,7 +85,7 @@ export default function RootLayout({
                 <div>
                   <h5 className="font-semibold mb-4">Company</h5>
                   <ul className="space-y-2 text-sm text-clay-300">
-                    <li><a href="#" className="hover:text-white">About</a></li>
+                    <li><a href="/about" className="hover:text-white">About</a></li>
                     <li><a href="/help/contact" className="hover:text-white">Contact</a></li>
                     <li><a href="/help/faq" className="hover:text-white">FAQ</a></li>
                   </ul>
@@ -93,8 +93,8 @@ export default function RootLayout({
                 <div>
                   <h5 className="font-semibold mb-4">Legal</h5>
                   <ul className="space-y-2 text-sm text-clay-300">
-                    <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-                    <li><a href="#" className="hover:text-white">Terms of Service</a></li>
+                    <li><a href="/privacy" className="hover:text-white">Privacy Policy</a></li>
+                    <li><a href="/terms" className="hover:text-white">Terms of Service</a></li>
                   </ul>
                 </div>
               </div>
