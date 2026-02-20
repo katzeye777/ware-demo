@@ -48,7 +48,7 @@ export const DRY_BATCH_SIZES: BatchSizeOption[] = [
 
 // ─── Wet Batch Sizes (fixed, only 3 options) ────────────────────
 
-export type WetSize = 'pint' | 'gallon' | '5gallon';
+export type WetSize = 'pint' | 'gallon';
 
 export interface WetBatchSizeOption {
   key: WetSize;
@@ -59,14 +59,12 @@ export interface WetBatchSizeOption {
 export const WET_BATCH_SIZES: WetBatchSizeOption[] = [
   { key: 'pint',    label: '1 Pint',     sublabel: '~473 ml' },
   { key: 'gallon',  label: '1 Gallon',   sublabel: '~3.8 L' },
-  { key: '5gallon', label: '5 Gallons',  sublabel: '~19 L' },
 ];
 
 // Map wet sizes to approximate gram equivalents (for cart/API compatibility)
 export const WET_SIZE_GRAMS: Record<WetSize, number> = {
   pint: 350,
   gallon: 3000,
-  '5gallon': 15000,
 };
 
 // ─── Price Calculations ─────────────────────────────────────────
@@ -104,7 +102,6 @@ export function calculateDryPrice(grams: number): number {
 const WET_PREMIUMS: Record<WetSize, { dryEquivGrams: number; premium: number }> = {
   pint:      { dryEquivGrams: 500,   premium: 10 },
   gallon:    { dryEquivGrams: 3000,  premium: 40 },
-  '5gallon': { dryEquivGrams: 15000, premium: 120 },
 };
 
 /**

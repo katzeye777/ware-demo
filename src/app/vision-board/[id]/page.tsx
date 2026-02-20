@@ -271,29 +271,40 @@ export default function VisionBoardGlazeDetailPage() {
 
             {/* Wet: 3 card buttons */}
             {glazeFormat === 'wet' && (
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {WET_BATCH_SIZES.map((size) => {
-                  const price = calculateWetPrice(size.key);
-                  return (
-                    <button
-                      key={size.key}
-                      onClick={() => {
-                        setWetSize(size.key);
-                        setBatchSize(WET_SIZE_GRAMS[size.key]);
-                      }}
-                      className={`flex flex-col items-center px-3 py-3 rounded-lg border-2 text-sm transition-all ${
-                        wetSize === size.key
-                          ? 'border-amber-500 bg-amber-50 text-amber-900'
-                          : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
-                      }`}
-                    >
-                      <span className="font-bold">{size.label}</span>
-                      <span className="text-xs text-clay-500">{size.sublabel}</span>
-                      <span className="font-bold mt-1">{formatPrice(price)}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  {WET_BATCH_SIZES.map((size) => {
+                    const price = calculateWetPrice(size.key);
+                    return (
+                      <button
+                        key={size.key}
+                        onClick={() => {
+                          setWetSize(size.key);
+                          setBatchSize(WET_SIZE_GRAMS[size.key]);
+                        }}
+                        className={`flex flex-col items-center px-3 py-3 rounded-lg border-2 text-sm transition-all ${
+                          wetSize === size.key
+                            ? 'border-amber-500 bg-amber-50 text-amber-900'
+                            : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
+                        }`}
+                      >
+                        <span className="font-bold">{size.label}</span>
+                        <span className="text-xs text-clay-500">{size.sublabel}</span>
+                        <span className="font-bold mt-1">{formatPrice(price)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-clay-500 text-center mb-4">
+                  Need a larger amount pre-mixed?{' '}
+                  <Link
+                    href="/help/contact"
+                    className="text-brand-600 hover:text-brand-700 underline"
+                  >
+                    Contact us
+                  </Link>
+                </p>
+              </>
             )}
 
             {/* Dry / Wet toggle */}

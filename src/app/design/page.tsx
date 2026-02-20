@@ -52,7 +52,7 @@ function DesignPageContent() {
   const [atmosphere, setAtmosphere] = useState('ox');
   const [batchSize, setBatchSize] = useState(350);
   const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
-  const [wetSize, setWetSize] = useState<'pint' | 'gallon' | '5gallon'>('pint');
+  const [wetSize, setWetSize] = useState<'pint' | 'gallon'>('pint');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
