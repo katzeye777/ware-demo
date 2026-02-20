@@ -5,8 +5,7 @@
  * 500g = $21.43 at base rate. Volume discount (3% compounding per
  * 500g step above 500g, capped at 40%) kicks in at 1kg+.
  *
- * Wet/pre-mixed: fixed sizes only (pint, gallon, 5-gallon) with
- * heavy premium to disincentivize.
+ * Wet/pre-mixed: fixed flat prices — $25 pint, $150 gallon.
  */
 
 // ─── Constants ───────────────────────────────────────────────────
@@ -98,19 +97,17 @@ export function calculateDryPrice(grams: number): number {
   return Math.round(grams * discountedRate * 100) / 100;
 }
 
-// Wet premiums by size
-const WET_PREMIUMS: Record<WetSize, { dryEquivGrams: number; premium: number }> = {
-  pint:      { dryEquivGrams: 500,   premium: 10 },
-  gallon:    { dryEquivGrams: 3000,  premium: 40 },
+// Flat wet prices by size
+const WET_PRICES: Record<WetSize, number> = {
+  pint:   25.00,
+  gallon: 150.00,
 };
 
 /**
  * Get the fixed price for a wet/pre-mixed size.
- * Computed as: dry price at equivalent weight + premium.
  */
 export function calculateWetPrice(size: WetSize): number {
-  const { dryEquivGrams, premium } = WET_PREMIUMS[size];
-  return Math.round((calculateDryPrice(dryEquivGrams) + premium) * 100) / 100;
+  return WET_PRICES[size];
 }
 
 /**

@@ -121,30 +121,14 @@ export default function VisionBoardGlazeDetailPage() {
             {/* Color Reference */}
             <div className="card">
               <h4 className="text-sm font-medium text-clay-700 mb-3">Color Reference</h4>
-              <div className="flex items-stretch gap-3">
-                <div className="flex-1">
-                  <div
-                    className="w-full h-20 rounded-lg color-swatch border border-clay-200"
-                    style={{ backgroundColor: glaze.color_hex }}
-                  />
-                  <p className="text-xs text-clay-500 mt-2 text-center">Software prediction</p>
-                  <p className="text-xs font-mono font-bold text-clay-900 text-center">
-                    {glaze.color_hex.toUpperCase()}
-                  </p>
-                </div>
-                {glaze.preview_image_url && (
-                  <div className="flex-1">
-                    <div className="w-full h-20 rounded-lg overflow-hidden border border-clay-200">
-                      <img
-                        src={glaze.preview_image_url}
-                        alt="Fired sample"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <p className="text-xs text-clay-500 mt-2 text-center">Fired test tile</p>
-                  </div>
-                )}
-              </div>
+              <div
+                className="w-full h-40 rounded-lg color-swatch border border-clay-200"
+                style={{ backgroundColor: glaze.color_hex }}
+              />
+              <p className="text-xs text-clay-500 mt-2 text-center">Software prediction</p>
+              <p className="text-xs font-mono font-bold text-clay-900 text-center">
+                {glaze.color_hex.toUpperCase()}
+              </p>
             </div>
 
             {/* Favorite + Share */}

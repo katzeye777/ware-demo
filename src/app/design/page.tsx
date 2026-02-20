@@ -10,7 +10,6 @@ import FinishSelector from './components/FinishSelector';
 import ApplicationSelector from './components/ApplicationSelector';
 import FiringSelector from './components/FiringSelector';
 import BatchSizeSelector from './components/BatchSizeSelector';
-import VesselSelector from './components/VesselSelector';
 import ResultsPanel from './components/ResultsPanel';
 import { Sparkles, Save, ArrowRight, Image as ImageIcon } from 'lucide-react';
 
@@ -46,7 +45,7 @@ function DesignPageContent() {
 
   const [color, setColor] = useState('#e4533d');
   const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>('glossy');
-  const [vesselType, setVesselType] = useState('bowl');
+  const vesselType = 'bowl';
   const [application, setApplication] = useState<'dip' | 'brush' | 'spray'>('dip');
   const [cone, setCone] = useState('6');
   const [atmosphere, setAtmosphere] = useState('ox');
@@ -216,11 +215,6 @@ function DesignPageContent() {
                 {color.toUpperCase()}
               </p>
             </div>
-          </div>
-
-          {/* Vessel Type */}
-          <div className="card">
-            <VesselSelector value={vesselType} onChange={setVesselType} />
           </div>
 
           {/* Finish Selector */}
