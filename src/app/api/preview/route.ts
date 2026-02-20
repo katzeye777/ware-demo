@@ -106,8 +106,63 @@ async function generateImageDallE(
   };
 }
 
-// ── Swap this function when Stable Diffusion is ready ──
-const generateImage: typeof generateImageDallE = generateImageDallE;
+// ── Stable Diffusion local backend ──
+
+const SD_API_URL = process.env.SD_API_URL || 'http://localhost:8000';
+
+async function generateImageSD(
+  colorHex: string,
+  finish: string,
+  vesselType: string = 'bowl'
+): Promise<GenerateImageResult> {
+  const prompt = buildPrompt(colorHex, finish, vesselType);
+
+  const response = await fetch(`${SD_API_URL}/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      hex: colorHex,
+      form: vesselType,
+      finish: finish,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`SD API error: ${response.status}`);
+  }
+
+  // SD returns PNG bytes — convert to base64 data URL
+  const buffer = await response.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString('base64');
+
+  return {
+    image_url: `data:image/png;base64,${base64}`,
+    prompt_used: prompt,
+    model: 'sd-juggernaut-pottery',
+  };
+}
+
+// ── Pick backend: SD if available, otherwise DALL-E ──
+
+async function generateImageWithFallback(
+  colorHex: string,
+  finish: string,
+  vesselType: string = 'bowl'
+): Promise<GenerateImageResult> {
+  // Try SD first (for pottery forms, SD is required for color accuracy)
+  try {
+    const healthCheck = await fetch(`${SD_API_URL}/health`, { signal: AbortSignal.timeout(2000) });
+    if (healthCheck.ok) {
+      return await generateImageSD(colorHex, finish, vesselType);
+    }
+  } catch {
+    // SD not available — fall through to DALL-E
+  }
+
+  return await generateImageDallE(colorHex, finish, vesselType);
+}
+
+const generateImage = generateImageWithFallback;
 
 // ── Route Handler ──
 

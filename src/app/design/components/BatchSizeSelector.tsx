@@ -2,63 +2,48 @@
 
 import Link from 'next/link';
 import { Leaf, Droplets } from 'lucide-react';
+import {
+  DRY_BATCH_SIZES,
+  WET_BATCH_SIZES,
+  WET_SIZE_GRAMS,
+  calculateDryPrice,
+  calculateWetPrice,
+  getVolumeDiscount,
+  formatPrice,
+  type WetSize,
+} from '@/lib/pricing';
 
 interface BatchSizeSelectorProps {
   value: number;
   onChange: (value: number) => void;
   format: 'dry' | 'wet';
   onFormatChange: (format: 'dry' | 'wet') => void;
+  wetSize?: WetSize;
+  onWetSizeChange?: (size: WetSize) => void;
 }
 
-const PRICE_PER_PINT = 15.0;
-const PINT_GRAMS = 350;
-const WET_SURCHARGE = 1.30; // 30% markup for pre-mixed
-
-// All available batch sizes
-const BATCH_SIZES: { value: number; label: string }[] = [
-  { value: 350, label: 'Pint (350g)' },
-  { value: 500, label: '500g' },
-  { value: 1000, label: '1 kg (1,000g)' },
-  { value: 1500, label: '1.5 kg (1,500g)' },
-  { value: 2000, label: '2 kg (2,000g)' },
-  { value: 2500, label: '2.5 kg (2,500g)' },
-  { value: 3000, label: '3 kg (3,000g)' },
-  { value: 3500, label: '3.5 kg (3,500g)' },
-  { value: 4000, label: '4 kg (4,000g)' },
-  { value: 4500, label: '4.5 kg (4,500g)' },
-  { value: 5000, label: '5 kg (5,000g)' },
-  { value: 5500, label: '5.5 kg (5,500g)' },
-  { value: 6000, label: '6 kg (6,000g)' },
-  { value: 6500, label: '6.5 kg (6,500g)' },
-  { value: 7000, label: '7 kg (7,000g)' },
-  { value: 7500, label: '7.5 kg (7,500g)' },
-  { value: 8000, label: '8 kg (8,000g)' },
-  { value: 8500, label: '8.5 kg (8,500g)' },
-  { value: 9000, label: '9 kg (9,000g)' },
-  { value: 9500, label: '9.5 kg (9,500g)' },
-  { value: 10000, label: '10 kg (10,000g)' },
-  { value: 10500, label: '10.5 kg (10,500g)' },
-  { value: 11000, label: '11 kg (11,000g)' },
-  { value: 11500, label: '11.5 kg (11,500g)' },
-  { value: 12000, label: '12 kg (12,000g)' },
-  { value: 12500, label: '12.5 kg (12,500g)' },
-  { value: 13000, label: '13 kg (13,000g)' },
-  { value: 13500, label: '13.5 kg (13,500g)' },
-  { value: 14000, label: '14 kg (14,000g)' },
-  { value: 14500, label: '14.5 kg (14,500g)' },
-  { value: 15000, label: '5 Gallon Bucket (15,000g)' },
-];
-
-function calculatePrice(grams: number, isWet: boolean = false): string {
-  const base = (grams / PINT_GRAMS) * PRICE_PER_PINT;
-  const total = isWet ? base * WET_SURCHARGE : base;
-  return total.toFixed(2);
-}
-
-export default function BatchSizeSelector({ value, onChange, format, onFormatChange }: BatchSizeSelectorProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+export default function BatchSizeSelector({
+  value,
+  onChange,
+  format,
+  onFormatChange,
+  wetSize = 'pint',
+  onWetSizeChange,
+}: BatchSizeSelectorProps) {
+  const handleDryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(Number(e.target.value));
   };
+
+  const handleWetSelect = (size: WetSize) => {
+    onWetSizeChange?.(size);
+    onChange(WET_SIZE_GRAMS[size]);
+  };
+
+  const currentPrice = format === 'dry'
+    ? calculateDryPrice(value)
+    : calculateWetPrice(wetSize);
+
+  const currentDiscount = format === 'dry' ? getVolumeDiscount(value) : 0;
 
   return (
     <div className="space-y-4">
@@ -68,31 +53,63 @@ export default function BatchSizeSelector({ value, onChange, format, onFormatCha
         </label>
         <div className="text-right">
           <div className="text-2xl font-bold text-brand-600">
-            ${calculatePrice(value, format === 'wet')}
+            {formatPrice(currentPrice)}
           </div>
           <div className="text-xs text-clay-500">
+            {currentDiscount > 0 && (
+              <span className="text-green-600 font-medium">
+                {Math.round(currentDiscount * 100)}% volume discount &middot;{' '}
+              </span>
+            )}
             estimated price
           </div>
         </div>
       </div>
 
-      {/* Dropdown */}
-      <select
-        value={value}
-        onChange={handleChange}
-        className="w-full px-4 py-3 bg-white border border-clay-300 rounded-lg text-clay-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer appearance-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 12px center',
-        }}
-      >
-        {BATCH_SIZES.map((size) => (
-          <option key={size.value} value={size.value}>
-            {size.label} — ${calculatePrice(size.value, format === 'wet')}
-          </option>
-        ))}
-      </select>
+      {/* Dry: dropdown with 12 sizes */}
+      {format === 'dry' && (
+        <select
+          value={value}
+          onChange={handleDryChange}
+          className="w-full px-4 py-3 bg-white border border-clay-300 rounded-lg text-clay-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer appearance-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 12px center',
+          }}
+        >
+          {DRY_BATCH_SIZES.map((size) => (
+              <option key={size.value} value={size.value}>
+                {size.label} — {size.imperial}
+              </option>
+          ))}
+        </select>
+      )}
+
+      {/* Wet: 3 card buttons */}
+      {format === 'wet' && (
+        <div className="grid grid-cols-3 gap-2">
+          {WET_BATCH_SIZES.map((size) => {
+            const price = calculateWetPrice(size.key);
+            return (
+              <button
+                key={size.key}
+                type="button"
+                onClick={() => handleWetSelect(size.key)}
+                className={`flex flex-col items-center px-3 py-3 rounded-lg border-2 text-sm transition-all ${
+                  wetSize === size.key
+                    ? 'border-amber-500 bg-amber-50 text-amber-900'
+                    : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
+                }`}
+              >
+                <span className="font-bold">{size.label}</span>
+                <span className="text-xs text-clay-500">{size.sublabel}</span>
+                <span className="font-bold mt-1">{formatPrice(price)}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Dry / Wet Format Toggle */}
       <div>

@@ -21,6 +21,7 @@ import type {
 import { colorEngine, stainDisplayName } from './color-engine';
 import type { ColorMatch as EngineColorMatch } from './color-engine';
 import { COLOR_TEST_DATA } from './color-data';
+import { estimatePrice } from './pricing';
 
 // ── Initialize color engine on first import ──
 // Defaults to cone 6 oxidation. Re-loads when user changes cone or atmosphere.
@@ -362,14 +363,7 @@ function generateGlazeName(hex: string, index: number): string {
   return `${family.charAt(0).toUpperCase() + family.slice(1)} #${index + 1}`;
 }
 
-// ── Pricing logic ──
-
-function estimatePrice(batchSizeGrams: number, isPrivate: boolean, format: 'dry' | 'wet' = 'dry'): number {
-  let base = (batchSizeGrams / 350) * 15;
-  if (format === 'wet') base *= 1.30; // 30% surcharge for pre-mixed
-  const privateSurcharge = isPrivate ? 4.99 : 0;
-  return Math.round((base + privateSurcharge) * 100) / 100;
-}
+// Pricing logic imported from @/lib/pricing
 
 // ── Transform engine match → API match ──
 
@@ -412,13 +406,14 @@ export async function findGlaze(
 
 export async function generatePreview(
   colorHex: string,
-  finish: string = 'glossy'
+  finish: string = 'glossy',
+  vesselType: string = 'bowl'
 ): Promise<{ image_url: string; prompt_used: string }> {
   try {
     const response = await fetch('/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ color_hex: colorHex, finish }),
+      body: JSON.stringify({ color_hex: colorHex, finish, vessel_type: vesselType }),
     });
 
     if (!response.ok) {

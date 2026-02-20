@@ -10,6 +10,7 @@ import FinishSelector from './components/FinishSelector';
 import ApplicationSelector from './components/ApplicationSelector';
 import FiringSelector from './components/FiringSelector';
 import BatchSizeSelector from './components/BatchSizeSelector';
+import VesselSelector from './components/VesselSelector';
 import ResultsPanel from './components/ResultsPanel';
 import { Sparkles, Save, ArrowRight, Image as ImageIcon } from 'lucide-react';
 
@@ -45,11 +46,13 @@ function DesignPageContent() {
 
   const [color, setColor] = useState('#e4533d');
   const [finish, setFinish] = useState<'glossy' | 'matte' | 'satin'>('glossy');
+  const [vesselType, setVesselType] = useState('bowl');
   const [application, setApplication] = useState<'dip' | 'brush' | 'spray'>('dip');
   const [cone, setCone] = useState('6');
   const [atmosphere, setAtmosphere] = useState('ox');
   const [batchSize, setBatchSize] = useState(350);
   const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
+  const [wetSize, setWetSize] = useState<'pint' | 'gallon' | '5gallon'>('pint');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -108,7 +111,7 @@ function DesignPageContent() {
 
     try {
       const matchHex = designResult.primary_match.color_hex;
-      const result = await generatePreview(matchHex, finish);
+      const result = await generatePreview(matchHex, finish, vesselType);
       setPreviewImage(result.image_url);
     } catch {
       setError('Failed to generate preview image');
@@ -215,6 +218,11 @@ function DesignPageContent() {
             </div>
           </div>
 
+          {/* Vessel Type */}
+          <div className="card">
+            <VesselSelector value={vesselType} onChange={setVesselType} />
+          </div>
+
           {/* Finish Selector */}
           <div className="card">
             <FinishSelector value={finish} onChange={setFinish} />
@@ -242,6 +250,8 @@ function DesignPageContent() {
               onChange={setBatchSize}
               format={glazeFormat}
               onFormatChange={setGlazeFormat}
+              wetSize={wetSize}
+              onWetSizeChange={setWetSize}
             />
           </div>
         </div>
@@ -288,7 +298,7 @@ function DesignPageContent() {
                     <p className="text-sm">
                       Click &quot;Generate Preview&quot; to see how this
                       <br />
-                      glaze looks on a ceramic bowl
+                      glaze looks on a ceramic {vesselType}
                     </p>
                   </div>
                 </div>

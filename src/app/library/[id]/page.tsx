@@ -22,26 +22,18 @@ import {
   Droplets,
 } from 'lucide-react';
 import Link from 'next/link';
-
-const PRICE_PER_PINT = 15.0;
-const PINT_GRAMS = 350;
-const WET_SURCHARGE = 1.3;
-
-const BATCH_SIZES = [
-  { value: 350, label: 'Pint (350g)' },
-  { value: 500, label: '500g' },
-  { value: 1000, label: '1 kg' },
-  { value: 2000, label: '2 kg' },
-  { value: 5000, label: '5 kg' },
-];
+import {
+  DRY_BATCH_SIZES,
+  WET_BATCH_SIZES,
+  WET_SIZE_GRAMS,
+  calculateDryPrice,
+  calculateWetPrice,
+  getVolumeDiscount,
+  formatPrice,
+  type WetSize,
+} from '@/lib/pricing';
 
 const GALLERY_VESSELS = ['mug', 'bowl', 'vase'] as const;
-
-function calculatePrice(grams: number, isWet: boolean = false): string {
-  const base = (grams / PINT_GRAMS) * PRICE_PER_PINT;
-  const total = isWet ? base * WET_SURCHARGE : base;
-  return total.toFixed(2);
-}
 
 /** Resize an image data URL to max 800px wide, JPEG quality 0.7 */
 function resizeImage(dataUrl: string): Promise<string> {
@@ -83,8 +75,14 @@ export default function LibraryGlazeDetailPage() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [batchSize, setBatchSize] = useState(350);
   const [glazeFormat, setGlazeFormat] = useState<'dry' | 'wet'>('dry');
+  const [wetSize, setWetSize] = useState<WetSize>('pint');
   const [addedToCart, setAddedToCart] = useState(false);
   const [waterPct, setWaterPct] = useState(80);
+
+  const currentPrice = glazeFormat === 'dry'
+    ? calculateDryPrice(batchSize)
+    : calculateWetPrice(wetSize);
+  const currentDiscount = glazeFormat === 'dry' ? getVolumeDiscount(batchSize) : 0;
 
   // Personal rating + review (localStorage-backed)
   const [personalRating, setPersonalRating] = useState(0);
@@ -241,7 +239,7 @@ export default function LibraryGlazeDetailPage() {
       batchSizeGrams: batchSize,
       colorHex: glaze.color_hex,
       isPrivate: false,
-      price: Number(calculatePrice(batchSize, glazeFormat === 'wet')),
+      price: currentPrice,
     });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
@@ -486,28 +484,65 @@ export default function LibraryGlazeDetailPage() {
               <h3 className="font-semibold text-clay-900">Reorder</h3>
               <div className="text-right">
                 <div className="text-2xl font-bold text-brand-600">
-                  ${calculatePrice(batchSize, glazeFormat === 'wet')}
+                  {formatPrice(currentPrice)}
                 </div>
-                <div className="text-xs text-clay-500">estimated price</div>
+                <div className="text-xs text-clay-500">
+                  {currentDiscount > 0 && (
+                    <span className="text-green-600 font-medium">
+                      {Math.round(currentDiscount * 100)}% volume discount &middot;{' '}
+                    </span>
+                  )}
+                  estimated price
+                </div>
               </div>
             </div>
 
-            {/* Batch size buttons */}
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {BATCH_SIZES.map((size) => (
-                <button
-                  key={size.value}
-                  onClick={() => setBatchSize(size.value)}
-                  className={`px-2 py-2.5 rounded-lg border-2 font-medium text-xs transition-all text-center ${
-                    batchSize === size.value
-                      ? 'border-brand-500 bg-brand-50 text-brand-700'
-                      : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
-                  }`}
-                >
-                  {size.label}
-                </button>
-              ))}
-            </div>
+            {/* Dry: dropdown with imperial weights */}
+            {glazeFormat === 'dry' && (
+              <select
+                value={batchSize}
+                onChange={(e) => setBatchSize(Number(e.target.value))}
+                className="w-full px-4 py-3 bg-white border border-clay-300 rounded-lg text-clay-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 cursor-pointer appearance-none mb-4"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                }}
+              >
+                {DRY_BATCH_SIZES.map((size) => (
+                  <option key={size.value} value={size.value}>
+                    {size.label} — {size.imperial}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Wet: 3 card buttons */}
+            {glazeFormat === 'wet' && (
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {WET_BATCH_SIZES.map((size) => {
+                  const price = calculateWetPrice(size.key);
+                  return (
+                    <button
+                      key={size.key}
+                      onClick={() => {
+                        setWetSize(size.key);
+                        setBatchSize(WET_SIZE_GRAMS[size.key]);
+                      }}
+                      className={`flex flex-col items-center px-3 py-3 rounded-lg border-2 text-sm transition-all ${
+                        wetSize === size.key
+                          ? 'border-amber-500 bg-amber-50 text-amber-900'
+                          : 'border-clay-200 bg-white text-clay-600 hover:border-clay-300'
+                      }`}
+                    >
+                      <span className="font-bold">{size.label}</span>
+                      <span className="text-xs text-clay-500">{size.sublabel}</span>
+                      <span className="font-bold mt-1">{formatPrice(price)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Dry / Wet toggle */}
             <div className="grid grid-cols-2 gap-2 mb-4">
