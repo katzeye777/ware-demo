@@ -258,7 +258,7 @@ const MAX_STAIN_PCT = 15.0;
 const K_NEIGHBORS = 8;
 
 export class ColorEngine {
-  static readonly VERSION = '4.3.0';
+  static readonly VERSION = '4.4.0';
 
   // All data points (generatable + reference) for Lab-space neighbor search
   private labPoints: [number, number, number][] = [];
