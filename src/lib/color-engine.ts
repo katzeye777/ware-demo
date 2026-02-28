@@ -258,7 +258,7 @@ const MAX_STAIN_PCT = 15.0;
 const K_NEIGHBORS = 8;
 
 export class ColorEngine {
-  static readonly VERSION = '4.4.0';
+  static readonly VERSION = '4.5.0';
 
   // All data points (generatable + reference) for Lab-space neighbor search
   private labPoints: [number, number, number][] = [];
@@ -282,7 +282,7 @@ export class ColorEngine {
    * Extra stain data is kept for color landscape awareness but never
    * appears in generated recipes.
    */
-  static readonly BASE_STAINS = new Set(['6026', '6264', '6364', '6388', '6450', '6600', 'zircopax']);
+  static readonly BASE_STAINS = new Set(['6026', '6388', '6450', '6600', 'zircopax']);
 
   /**
    * Load data filtered by cone and atmosphere.
